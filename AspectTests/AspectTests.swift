@@ -13,67 +13,80 @@ class AspectTests: XCTestCase {
     
     func testAfterHookSelectorOfAllInstances() {
         var invokeCount = 0
-        let vc = ViewControllerAfter()
-        let anotherVC = ViewControllerAfter()
+        let userA = GuestUser()
+        let userB = GuestUser()
         
-        ViewControllerAfter.hookSelector(with: #selector(ViewControllerAfter.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+        GuestUser.hookSelector(with: #selector(User.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
+            guard let target = aspect.instance as? User else { XCTFail(); return }
+            
             XCTAssertNotNil(aspect.instance)
+            XCTAssertNotNil(target.productName)
             XCTAssertEqual(aspect.arguments.count, 3)
-            } as AspectBlock)
+        } as AspectBlock)
         
-        vc.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2))
-        anotherVC.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3))
+        userA.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2))
+        userB.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3))
         
         XCTAssertEqual(invokeCount, 2)
+        XCTAssertEqual(userA.productName, "MacBook")
+        XCTAssertEqual(userA.price, 10000.23)
+        XCTAssertEqual(userA.count, 2)
+        XCTAssertEqual(userB.productName, "iPhone")
+        XCTAssertEqual(userB.price, 5000)
+        XCTAssertEqual(userB.count, 3)
     }
     
     func testBeforeHookSelectorOfAllInstances() {
         var invokeCount = 0
-        let vc = ViewControllerBefore()
+        let user = UserBefore()
         
-        ViewControllerBefore.hookSelector(with: #selector(ViewControllerBefore.buy(productName:price:count:)), position: .before, usingBlock: { aspect in
+        UserBefore.hookSelector(with: #selector(UserBefore.buy(productName:price:count:)), position: .before, usingBlock: { aspect in
             invokeCount += 1
-            let target = aspect.instance as! ViewControllerBefore
+            guard let target = aspect.instance as? UserBefore else { XCTFail(); return }
+            
             XCTAssertNotNil(target)
             XCTAssertNil(target.productName)
-            } as AspectBlock)
+        } as AspectBlock)
         
-        vc.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
+        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 5))
         
         XCTAssertEqual(invokeCount, 1)
-        XCTAssertNotNil(vc.productName)
+        XCTAssertEqual(user.productName, "MacBook")
+        XCTAssertEqual(user.price, 10000)
+        XCTAssertEqual(user.count, 5)
     }
     
     func testInsteadHookSelectorOfAllInstances() {
         var invokeCount = 0
-        let vc = ViewControllerInstead()
+        let user = UserInstead()
         
-        ViewControllerInstead.hookSelector(with: #selector(ViewControllerInstead.buy(productName:price:count:)), position: .instead, usingBlock: { aspect in
+        UserInstead.hookSelector(with: #selector(UserInstead.buy(productName:price:count:)), position: .instead, usingBlock: { aspect in
             invokeCount += 1
-            let target = aspect.instance as! ViewControllerInstead
+            guard let target = aspect.instance as? UserInstead else { XCTFail(); return }
+            
             XCTAssertNotNil(target)
             XCTAssertNil(target.productName)
-            } as AspectBlock)
+        } as AspectBlock)
         
-        vc.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
+        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
         
         XCTAssertEqual(invokeCount, 1)
-        XCTAssertNil(vc.productName)
+        XCTAssertNil(user.productName)
     }
     
     func testAfterHookSelectorOfOneInstance() {
         var invokeCount = 0
-        let vc = ViewControllerAfterOne()
-        let anotherVC = ViewControllerAfterOne()
-        let indexPath = IndexPath(row: 5, section: 10)
+        let userA = RegisterUser()
+        let userB = RegisterUser()
+        let indexPath = IndexPath(item: 5, section: 10)
         
-        vc.hookSelector(with: #selector(ViewControllerAfterOne.buy(productName:price:count:indexPath:)), position: .after, usingBlock: { aspect in
+        userA.hookSelector(with: #selector(RegisterUser.buy(productName:price:count:indexPath:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
-            if let target = aspect.instance as? ViewControllerAfterOne {
-                XCTAssertEqual(target, vc)
-                XCTAssertNotEqual(target, anotherVC)
+            if let target = aspect.instance as? RegisterUser {
+                XCTAssertEqual(target, userA)
+                XCTAssertNotEqual(target, userB)
                 XCTAssertEqual(target.productName, "MacBook")
                 XCTAssertEqual(target.price, 10000.23)
                 XCTAssertEqual(target.count, 2)
@@ -81,30 +94,33 @@ class AspectTests: XCTestCase {
             } else {
                 XCTAssertNotNil(aspect.instance)
             }
-            } as AspectBlock)
+        } as AspectBlock)
         
-        vc.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2), indexPath: indexPath)
-        anotherVC.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3), indexPath: IndexPath(row: 2, section: 7))
+        userA.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2), indexPath: indexPath)
+        userB.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3), indexPath: IndexPath(item: 2, section: 7))
         
         XCTAssertEqual(invokeCount, 1)
+        XCTAssertEqual(userA.productName, "MacBook")
+        XCTAssertEqual(userA.price, 10000.23)
+        XCTAssertEqual(userA.count, 2)
     }
     
     func testHookSameSelectorInDistinctClasses() {
         var invokeACount = 0
         var invokeBCount = 0
         
-        ViewControllerA.hookSelector(with: #selector(ViewControllerA.login), position: .after, usingBlock: { aspect in
+        Cat.hookSelector(with: #selector(Cat.run), position: .after, usingBlock: { aspect in
             invokeACount += 1
             XCTAssertNotNil(aspect.instance)
             } as AspectBlock)
         
-        ViewControllerB.hookSelector(with: #selector(ViewControllerB.login), position: .after, usingBlock: { aspect in
+        Dog.hookSelector(with: #selector(Dog.run), position: .after, usingBlock: { aspect in
             invokeBCount += 1
             XCTAssertNotNil(aspect.instance)
-            } as AspectBlock)
+        } as AspectBlock)
         
-        ViewControllerA.login()
-        ViewControllerB.login()
+        Cat.run()
+        Dog.run()
         
         XCTAssertEqual(invokeACount, 1)
         XCTAssertEqual(invokeBCount, 1)
@@ -113,29 +129,29 @@ class AspectTests: XCTestCase {
     func testHookNoImplementationSelector() {
         var invokeCount = 0
         
-        ViewController.hookSelector(with: #selector(ViewController.viewDidAppear(_:)), position: .after, usingBlock: { aspect in
+        User.hookSelector(with: #selector(RegisterUser.login(_:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             XCTAssertNotNil(aspect.instance)
             XCTAssertEqual(aspect.arguments.count, 1)
             XCTAssertEqual(aspect.arguments.first as! Bool, true)
-            } as AspectBlock)
+        } as AspectBlock)
         
-        ViewController().viewDidAppear(true)
-        ViewController().viewDidAppear(true)
+        User.login(true)
+        User.login(true)
         
         XCTAssertEqual(invokeCount, 2)
     }
 }
 
 
-private class ViewController: UIViewController {
+private class User: NSObject {
     
     var productName: String!
     var price: Double!
     var count: Int!
     var indexPath: IndexPath?
     
-    @objc dynamic static func login() {}
+    @objc dynamic static func login(_ needPassword: Bool) {}
     
     @objc dynamic func buy(productName: String, price: NSNumber, count: NSNumber) {
         self.productName = productName
@@ -151,15 +167,18 @@ private class ViewController: UIViewController {
     }
 }
 
-private class ViewControllerAfter: ViewController {}
-private class ViewControllerAfterOne: ViewController {}
-private class ViewControllerBefore: ViewController {}
-private class ViewControllerInstead: ViewController {}
+private class GuestUser: User {}
+private class RegisterUser: User {}
+private class UserBefore: User {}
+private class UserInstead: User {}
 
-private class ViewControllerA: UIViewController {
-    @objc dynamic static func login() {}
+
+private class Cat: NSObject {
+    
+    @objc dynamic static func run() {}
 }
 
-private class ViewControllerB: UIViewController {
-    @objc dynamic static func login() {}
+private class Dog: NSObject {
+    
+    @objc dynamic static func run() {}
 }

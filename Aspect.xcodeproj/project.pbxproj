@@ -17,18 +17,18 @@
 		013171FD22355F0400E87E5E /* Aspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0131716122353B9600E87E5E /* Aspect.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		013171FF22355F0400E87E5E /* NSObject+Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 0131717922353BDB00E87E5E /* NSObject+Aspect.m */; };
 		0131720022355F0400E87E5E /* Aspect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131717A22353BDB00E87E5E /* Aspect.swift */; };
-		0131720E22355F4000E87E5E /* Aspect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0131715E22353B9600E87E5E /* Aspect.framework */; };
 		0131721722355F6500E87E5E /* NSObject+Aspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0131717B22353BDB00E87E5E /* NSObject+Aspect.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0131721822355F6500E87E5E /* Aspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0131716122353B9600E87E5E /* Aspect.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0131721A22355F6500E87E5E /* NSObject+Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 0131717922353BDB00E87E5E /* NSObject+Aspect.m */; };
 		0131721B22355F6500E87E5E /* Aspect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131717A22353BDB00E87E5E /* Aspect.swift */; };
-		0131722722355F8D00E87E5E /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131716C22353B9700E87E5E /* AspectTests.swift */; };
-		0131722922355F8D00E87E5E /* Aspect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0131715E22353B9600E87E5E /* Aspect.framework */; };
 		0131723222355F9800E87E5E /* NSObject+Aspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0131717B22353BDB00E87E5E /* NSObject+Aspect.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0131723322355F9800E87E5E /* Aspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 0131716122353B9600E87E5E /* Aspect.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0131723522355F9800E87E5E /* NSObject+Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 0131717922353BDB00E87E5E /* NSObject+Aspect.m */; };
 		0131723622355F9800E87E5E /* Aspect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131717A22353BDB00E87E5E /* Aspect.swift */; };
-		0131724422355FA500E87E5E /* Aspect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0131715E22353B9600E87E5E /* Aspect.framework */; };
+		01495F912236AC6C00216DE7 /* Aspect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0131720622355F0400E87E5E /* Aspect.framework */; };
+		01495F972236ACA200216DE7 /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131716C22353B9700E87E5E /* AspectTests.swift */; };
+		01495FA12236ACDF00216DE7 /* Aspect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0131722122355F6500E87E5E /* Aspect.framework */; };
+		01495FA72236C39700216DE7 /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0131716C22353B9700E87E5E /* AspectTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,26 +39,19 @@
 			remoteGlobalIDString = 0131715D22353B9600E87E5E;
 			remoteInfo = Aspect;
 		};
-		0131720A22355F4000E87E5E /* PBXContainerItemProxy */ = {
+		01495F922236AC6C00216DE7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0131715522353B9600E87E5E /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0131715D22353B9600E87E5E;
-			remoteInfo = Aspect;
+			remoteGlobalIDString = 013171FA22355F0400E87E5E;
+			remoteInfo = "Aspect macOS";
 		};
-		0131722522355F8D00E87E5E /* PBXContainerItemProxy */ = {
+		01495FA22236ACDF00216DE7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0131715522353B9600E87E5E /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0131715D22353B9600E87E5E;
-			remoteInfo = Aspect;
-		};
-		0131724022355FA500E87E5E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0131715522353B9600E87E5E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0131715D22353B9600E87E5E;
-			remoteInfo = Aspect;
+			remoteGlobalIDString = 0131721522355F6500E87E5E;
+			remoteInfo = "Aspect tvOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -74,11 +67,10 @@
 		0131717B22353BDB00E87E5E /* NSObject+Aspect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Aspect.h"; sourceTree = "<group>"; };
 		0131718022353C7600E87E5E /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = SOURCE_ROOT; };
 		0131720622355F0400E87E5E /* Aspect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Aspect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0131721322355F4000E87E5E /* AspectTests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AspectTests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0131722122355F6500E87E5E /* Aspect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Aspect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0131722E22355F8D00E87E5E /* AspectTests tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AspectTests tvOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0131723C22355F9800E87E5E /* Aspect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Aspect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0131724922355FA500E87E5E /* AspectTests watchOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AspectTests watchOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		01495F8C2236AC6C00216DE7 /* AspectTests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AspectTests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		01495F9C2236ACDF00216DE7 /* AspectTests tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AspectTests tvOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		019C630A2235692A0011BA78 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		019C630B2235692A0011BA78 /* SmartNavigator.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmartNavigator.podspec; sourceTree = "<group>"; };
 		019C630C2235692A0011BA78 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -107,26 +99,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131720D22355F4000E87E5E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0131720E22355F4000E87E5E /* Aspect.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0131721C22355F6500E87E5E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0131722822355F8D00E87E5E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0131722922355F8D00E87E5E /* Aspect.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,11 +113,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131724322355FA500E87E5E /* Frameworks */ = {
+		01495F892236AC6C00216DE7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0131724422355FA500E87E5E /* Aspect.framework in Frameworks */,
+				01495F912236AC6C00216DE7 /* Aspect.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		01495F992236ACDF00216DE7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01495FA12236ACDF00216DE7 /* Aspect.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,9 +151,8 @@
 				0131722122355F6500E87E5E /* Aspect.framework */,
 				0131723C22355F9800E87E5E /* Aspect.framework */,
 				0131716722353B9700E87E5E /* AspectTests iOS.xctest */,
-				0131721322355F4000E87E5E /* AspectTests macOS.xctest */,
-				0131722E22355F8D00E87E5E /* AspectTests tvOS.xctest */,
-				0131724922355FA500E87E5E /* AspectTests watchOS.xctest */,
+				01495F8C2236AC6C00216DE7 /* AspectTests macOS.xctest */,
+				01495F9C2236ACDF00216DE7 /* AspectTests tvOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -317,24 +300,6 @@
 			productReference = 0131720622355F0400E87E5E /* Aspect.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		0131720822355F4000E87E5E /* AspectTests macOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0131721022355F4000E87E5E /* Build configuration list for PBXNativeTarget "AspectTests macOS" */;
-			buildPhases = (
-				0131720B22355F4000E87E5E /* Sources */,
-				0131720D22355F4000E87E5E /* Frameworks */,
-				0131720F22355F4000E87E5E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				0131720922355F4000E87E5E /* PBXTargetDependency */,
-			);
-			name = "AspectTests macOS";
-			productName = AspectTests;
-			productReference = 0131721322355F4000E87E5E /* AspectTests macOS.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		0131721522355F6500E87E5E /* Aspect tvOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0131721E22355F6500E87E5E /* Build configuration list for PBXNativeTarget "Aspect tvOS" */;
@@ -352,24 +317,6 @@
 			productName = Aspect;
 			productReference = 0131722122355F6500E87E5E /* Aspect.framework */;
 			productType = "com.apple.product-type.framework";
-		};
-		0131722322355F8D00E87E5E /* AspectTests tvOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0131722B22355F8D00E87E5E /* Build configuration list for PBXNativeTarget "AspectTests tvOS" */;
-			buildPhases = (
-				0131722622355F8D00E87E5E /* Sources */,
-				0131722822355F8D00E87E5E /* Frameworks */,
-				0131722A22355F8D00E87E5E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				0131722422355F8D00E87E5E /* PBXTargetDependency */,
-			);
-			name = "AspectTests tvOS";
-			productName = AspectTests;
-			productReference = 0131722E22355F8D00E87E5E /* AspectTests tvOS.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		0131723022355F9800E87E5E /* Aspect watchOS */ = {
 			isa = PBXNativeTarget;
@@ -389,22 +336,40 @@
 			productReference = 0131723C22355F9800E87E5E /* Aspect.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		0131723E22355FA500E87E5E /* AspectTests watchOS */ = {
+		01495F8B2236AC6C00216DE7 /* AspectTests macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0131724622355FA500E87E5E /* Build configuration list for PBXNativeTarget "AspectTests watchOS" */;
+			buildConfigurationList = 01495F962236AC6C00216DE7 /* Build configuration list for PBXNativeTarget "AspectTests macOS" */;
 			buildPhases = (
-				0131724122355FA500E87E5E /* Sources */,
-				0131724322355FA500E87E5E /* Frameworks */,
-				0131724522355FA500E87E5E /* Resources */,
+				01495F882236AC6C00216DE7 /* Sources */,
+				01495F892236AC6C00216DE7 /* Frameworks */,
+				01495F8A2236AC6C00216DE7 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0131723F22355FA500E87E5E /* PBXTargetDependency */,
+				01495F932236AC6C00216DE7 /* PBXTargetDependency */,
 			);
-			name = "AspectTests watchOS";
-			productName = AspectTests;
-			productReference = 0131724922355FA500E87E5E /* AspectTests watchOS.xctest */;
+			name = "AspectTests macOS";
+			productName = "AspectTests macOS";
+			productReference = 01495F8C2236AC6C00216DE7 /* AspectTests macOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		01495F9B2236ACDF00216DE7 /* AspectTests tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01495FA42236ACDF00216DE7 /* Build configuration list for PBXNativeTarget "AspectTests tvOS" */;
+			buildPhases = (
+				01495F982236ACDF00216DE7 /* Sources */,
+				01495F992236ACDF00216DE7 /* Frameworks */,
+				01495F9A2236ACDF00216DE7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				01495FA32236ACDF00216DE7 /* PBXTargetDependency */,
+			);
+			name = "AspectTests tvOS";
+			productName = "AspectTests tvOS";
+			productReference = 01495F9C2236ACDF00216DE7 /* AspectTests tvOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -424,6 +389,12 @@
 					0131716622353B9700E87E5E = {
 						CreatedOnToolsVersion = 10.1;
 					};
+					01495F8B2236AC6C00216DE7 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					01495F9B2236ACDF00216DE7 = {
+						CreatedOnToolsVersion = 10.1;
+					};
 				};
 			};
 			buildConfigurationList = 0131715822353B9600E87E5E /* Build configuration list for PBXProject "Aspect" */;
@@ -441,11 +412,10 @@
 				0131715D22353B9600E87E5E /* Aspect iOS */,
 				0131716622353B9700E87E5E /* AspectTests iOS */,
 				013171FA22355F0400E87E5E /* Aspect macOS */,
-				0131720822355F4000E87E5E /* AspectTests macOS */,
+				01495F8B2236AC6C00216DE7 /* AspectTests macOS */,
 				0131721522355F6500E87E5E /* Aspect tvOS */,
-				0131722322355F8D00E87E5E /* AspectTests tvOS */,
+				01495F9B2236ACDF00216DE7 /* AspectTests tvOS */,
 				0131723022355F9800E87E5E /* Aspect watchOS */,
-				0131723E22355FA500E87E5E /* AspectTests watchOS */,
 			);
 		};
 /* End PBXProject section */
@@ -472,21 +442,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131720F22355F4000E87E5E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0131721D22355F6500E87E5E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0131722A22355F8D00E87E5E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -500,7 +456,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131724522355FA500E87E5E /* Resources */ = {
+		01495F8A2236AC6C00216DE7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		01495F9A2236ACDF00216DE7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -536,27 +499,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131720B22355F4000E87E5E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0131721922355F6500E87E5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				0131721B22355F6500E87E5E /* Aspect.swift in Sources */,
 				0131721A22355F6500E87E5E /* NSObject+Aspect.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0131722622355F8D00E87E5E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0131722722355F8D00E87E5E /* AspectTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -569,10 +517,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0131724122355FA500E87E5E /* Sources */ = {
+		01495F882236AC6C00216DE7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01495F972236ACA200216DE7 /* AspectTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		01495F982236ACDF00216DE7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01495FA72236C39700216DE7 /* AspectTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -584,20 +541,15 @@
 			target = 0131715D22353B9600E87E5E /* Aspect iOS */;
 			targetProxy = 013171CC223559A400E87E5E /* PBXContainerItemProxy */;
 		};
-		0131720922355F4000E87E5E /* PBXTargetDependency */ = {
+		01495F932236AC6C00216DE7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0131715D22353B9600E87E5E /* Aspect iOS */;
-			targetProxy = 0131720A22355F4000E87E5E /* PBXContainerItemProxy */;
+			target = 013171FA22355F0400E87E5E /* Aspect macOS */;
+			targetProxy = 01495F922236AC6C00216DE7 /* PBXContainerItemProxy */;
 		};
-		0131722422355F8D00E87E5E /* PBXTargetDependency */ = {
+		01495FA32236ACDF00216DE7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0131715D22353B9600E87E5E /* Aspect iOS */;
-			targetProxy = 0131722522355F8D00E87E5E /* PBXContainerItemProxy */;
-		};
-		0131723F22355FA500E87E5E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0131715D22353B9600E87E5E /* Aspect iOS */;
-			targetProxy = 0131724022355FA500E87E5E /* PBXContainerItemProxy */;
+			target = 0131721522355F6500E87E5E /* Aspect tvOS */;
+			targetProxy = 01495FA22236ACDF00216DE7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -878,50 +830,6 @@
 			};
 			name = Release;
 		};
-		0131721122355F4000E87E5E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = AspectTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
-				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		0131721222355F4000E87E5E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = AspectTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
-				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		0131721F22355F6500E87E5E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -970,50 +878,6 @@
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 3;
-			};
-			name = Release;
-		};
-		0131722C22355F8D00E87E5E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = AspectTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = appletvos;
-				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		0131722D22355F8D00E87E5E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = AspectTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = appletvos;
-				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1068,39 +932,81 @@
 			};
 			name = Release;
 		};
-		0131724722355FA500E87E5E /* Debug */ = {
+		01495F942236AC6C00216DE7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = AspectTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.syzygy.AspectTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
+				SDKROOT = macosx;
 				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		0131724822355FA500E87E5E /* Release */ = {
+		01495F952236AC6C00216DE7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AspectTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.syzygy.AspectTests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Release;
+		};
+		01495FA52236ACDF00216DE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = AspectTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.syzygy.AspectTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.syzygy.AspectTests-tvOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
+				SDKROOT = appletvos;
 				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.1;
+			};
+			name = Debug;
+		};
+		01495FA62236ACDF00216DE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = AspectTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.syzygy.AspectTests-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.1;
 			};
 			name = Release;
 		};
@@ -1143,29 +1049,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0131721022355F4000E87E5E /* Build configuration list for PBXNativeTarget "AspectTests macOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0131721122355F4000E87E5E /* Debug */,
-				0131721222355F4000E87E5E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		0131721E22355F6500E87E5E /* Build configuration list for PBXNativeTarget "Aspect tvOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0131721F22355F6500E87E5E /* Debug */,
 				0131722022355F6500E87E5E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0131722B22355F8D00E87E5E /* Build configuration list for PBXNativeTarget "AspectTests tvOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0131722C22355F8D00E87E5E /* Debug */,
-				0131722D22355F8D00E87E5E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1179,11 +1067,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0131724622355FA500E87E5E /* Build configuration list for PBXNativeTarget "AspectTests watchOS" */ = {
+		01495F962236AC6C00216DE7 /* Build configuration list for PBXNativeTarget "AspectTests macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0131724722355FA500E87E5E /* Debug */,
-				0131724822355FA500E87E5E /* Release */,
+				01495F942236AC6C00216DE7 /* Debug */,
+				01495F952236AC6C00216DE7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		01495FA42236ACDF00216DE7 /* Build configuration list for PBXNativeTarget "AspectTests tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01495FA52236ACDF00216DE7 /* Debug */,
+				01495FA62236ACDF00216DE7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
