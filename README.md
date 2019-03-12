@@ -9,7 +9,7 @@ Aspect Oriented Programming in Objective-C and Swift. (For swift, the method mus
 
 ## Features
 - Hook any objective-c instance/class method
-- Hook same method name in different classes
+- Hook methods with same name in different classes
 
 ## Installation
 ### Swift Package Manager
@@ -36,5 +36,44 @@ pod 'Aspect', '~> 1.0'
 
 ## Usage
 
+Aspect hooks will add a block of code after/before/instead the current `selector`
+
+```swift
+NSObject.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
+    print("Do something in this block")
+} as AspectBlock)
+
+// Hook method "viewDidAppear" of all UIViewController's instances
+UIViewController.hookSelector(with: #selector(UIViewController.viewDidAppear(_:)), position: .after, usingBlock: { aspect in
+    print("Do something in this block")
+} as AspectBlock)
+
+// Hook only viewController's instance "viewDidLoad"
+let viewController = UIViewController()
+viewController.hookSelector(with: #selector(UIViewController.viewDidLoad), position: .before, usingBlock: { aspect in
+    print("Do something in this block")
+} as AspectBlock)
+```
+
+```objective-c
+[NSURLSession hookSelectorWith:@selector(sessionWithConfiguration:) position:AspectPositionBefore usingBlock:^{
+    NSLog(@"Do something in this block")
+}];
+
+NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.defaultSessionConfiguration];
+[session hookSelectorWith:@selector(getAllTasksWithCompletionHandler:) position:AspectPositionAfter usingBlock:^{
+    NSLog(@"Do something in this block");
+}];
+```
 
 ## Limitation
+### macOS
+You can hook any selector with any argument type and any argument count without limitation.
+
+### iOS/tvOS/watchOS
+Since ARM64 varargs routines changed calling conventions, we can only use work around solution to limit method's argument count with **6**, you can change source code to modify the count if needed. For method's argument type, it doesn't support these types that are not NSObject: 
+**float, double, CGPoint, CGSize, CGRect, NSRange** and so on.
+
+Some help links about these limitations:   
+[Apple Forum](https://forums.developer.apple.com/thread/38470)  
+[Apple Developer Documentation](https://developer.apple.com/documentation/uikit/core_app/updating_your_app_from_32-bit_to_64-bit_architecture/managing_functions_and_function_pointers)

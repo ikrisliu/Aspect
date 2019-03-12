@@ -114,7 +114,7 @@
 		01495FB82237ED6F00216DE7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		01495FBA2237ED6F00216DE7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		019C630A2235692A0011BA78 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		019C630B2235692A0011BA78 /* SmartNavigator.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmartNavigator.podspec; sourceTree = "<group>"; };
+		019C630B2235692A0011BA78 /* Aspect.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Aspect.podspec; sourceTree = "<group>"; };
 		019C630C2235692A0011BA78 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -264,7 +264,7 @@
 			children = (
 				019C630A2235692A0011BA78 /* Package.swift */,
 				019C630C2235692A0011BA78 /* README.md */,
-				019C630B2235692A0011BA78 /* SmartNavigator.podspec */,
+				019C630B2235692A0011BA78 /* Aspect.podspec */,
 			);
 			name = Deployment;
 			sourceTree = "<group>";
@@ -882,7 +882,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AGG3RNQPH;
 				INFOPLIST_FILE = AspectTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -906,7 +906,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AGG3RNQPH;
 				INFOPLIST_FILE = AspectTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1162,7 +1162,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AGG3RNQPH;
 				INFOPLIST_FILE = AspectDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1183,7 +1183,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4AGG3RNQPH;
 				INFOPLIST_FILE = AspectDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = (

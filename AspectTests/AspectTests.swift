@@ -11,6 +11,65 @@ import XCTest
 
 class AspectTests: XCTestCase {
     
+    func testHookMethodWithSelectorType() {
+        var invokeCount = 0
+        let objc = NSObject()
+        
+        objc.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.first as? String, "invalidSelector")
+        } as AspectBlock)
+        
+        objc.doesNotRecognizeSelector(NSSelectorFromString("invalidSelector"))
+        
+        XCTAssertEqual(invokeCount, 1)
+    }
+    
+    func testHookMethodWithPointerType() {
+        var invokeCount = 0
+        let str = NSString(string: "abc")
+        
+        str.hookSelector(with: #selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+
+            XCTAssertNotNil(aspect.instance)
+        } as AspectBlock)
+        
+        str.hookSelector(with: #selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertNotNil(aspect.arguments.first)
+        } as AspectBlock)
+        
+        var char: unichar = 0
+        str.getCharacters(&char)
+        
+        XCTAssertEqual(invokeCount, 1)
+        XCTAssertEqual(char, 97)
+    }
+    
+    func testHookMethodWithBlockType() {
+        var invokeCount = 0
+        let session = URLSession(configuration: .default)
+        
+        session.hookSelector(with: #selector(URLSession.getAllTasks(completionHandler:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertNotNil(aspect.arguments.first)
+        } as AspectBlock)
+        
+        session.getAllTasks { (tasks) in
+            invokeCount += 1
+            XCTAssertEqual(invokeCount, 2)
+        }
+        
+        XCTAssertEqual(invokeCount, 1)
+    }
+    
     func testAfterHookSelectorOfAllInstances() {
         var invokeCount = 0
         let userA = GuestUser()
@@ -131,32 +190,65 @@ class AspectTests: XCTestCase {
         XCTAssertEqual(invokeBCount, 1)
     }
     
-    func testHookNoImplementationSelector() {
+    func testHookMethodWithEnumAndBoolType() {
         var invokeCount = 0
         
-        User.hookSelector(with: #selector(RegisterUser.login(_:)), position: .after, usingBlock: { aspect in
+        User.hookSelector(with: #selector(User.exit), position: .after, usingBlock: { aspect in
             invokeCount += 1
+            
             XCTAssertNotNil(aspect.instance)
-            XCTAssertEqual(aspect.arguments.count, 1)
-            XCTAssertEqual(aspect.arguments.first as! Bool, true)
+            XCTAssertEqual(aspect.arguments.count, 0)
         } as AspectBlock)
         
-        User.login(true)
-        User.login(true)
+        User.exit()
+        User.exit()
         
         XCTAssertEqual(invokeCount, 2)
+    }
+    
+    func testHookNoImplementationSelector() {
+        var invokeCount = 0
+        let userA = User()
+        let userB = User()
+        
+        User.hookSelector(with: #selector(RegisterUser.login(type:needPassword:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.count, 2)
+            XCTAssertEqual(aspect.arguments.last as! Bool, true)
+            } as AspectBlock)
+        
+        userA.login(type: .mobile, needPassword: true)
+        userB.login(type: .email, needPassword: true)
+        
+        XCTAssertEqual(invokeCount, 2)
+        XCTAssertEqual(userA.loginType, LoginType.mobile)
+        XCTAssertEqual(userB.loginType, LoginType.email)
     }
 }
 
 
+@objc private enum LoginType: Int {
+    
+    case mobile = 7
+    case email = 8
+}
+
 private class User: NSObject {
     
-    var productName: String!
-    var price: Double!
-    var count: Int!
+    var loginType: LoginType?
+    
+    var productName: String?
+    var price: Double?
+    var count: Int?
     var indexPath: IndexPath?
     
-    @objc dynamic static func login(_ needPassword: Bool) {}
+    @objc dynamic static func exit() {}
+    
+    @objc dynamic func login(type: LoginType, needPassword: Bool) {
+        loginType = type
+    }
     
     @objc dynamic func buy(productName: String, price: NSNumber, count: NSNumber) {
         self.productName = productName

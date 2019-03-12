@@ -449,15 +449,36 @@ static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSV
     
     for (int idx = 2; idx < signature.numberOfArguments; idx++) {
         const char *argt = [signature getArgumentTypeAtIndex:idx];
+        int argIdx = idx - 2;
         
         if (strcmp(argt, @encode(id)) == 0) {
-            void *argv = arguments[idx - 2].pointerValue;
+            void *argv = arguments[argIdx].pointerValue;
             [invocation setArgument:&argv atIndex:idx];
         } else if (strcmp(argt, @encode(BOOL)) == 0) {
-            BOOL argv = (BOOL)arguments[idx - 2].pointerValue;
+            BOOL argv = (BOOL)arguments[argIdx].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else if (argt[0] == _C_PTR) {
+            void *argv = arguments[argIdx].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else if (strcmp(argt, @encode(SEL)) == 0) {
+            SEL argv = (SEL)arguments[argIdx].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else if (strcmp(argt, @encode(Class)) == 0) {
+            Class argv = (Class)arguments[argIdx].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
+            id argv = (id)arguments[argIdx].pointerValue;
+            id copiedVal = [argv copy];
+            [invocation setArgument:&copiedVal atIndex:idx];
+        } else if (strcmp(argt, @encode(int)) == 0 || strcmp(argt, @encode(short)) == 0 || strcmp(argt, @encode(char)) == 0 || strcmp(argt, @encode(BOOL)) == 0 ||
+                   strcmp(argt, @encode(unsigned int)) == 0 || strcmp(argt, @encode(unsigned short)) == 0 || strcmp(argt, @encode(unsigned char)) == 0 ||
+                   strcmp(argt, @encode(long)) == 0 || strcmp(argt, @encode(unsigned long)) == 0 || strcmp(argt, @encode(unsigned long long)) == 0) {
+            void *argv = arguments[argIdx].pointerValue;
             [invocation setArgument:&argv atIndex:idx];
         } else {
-            NSCAssert(NO, @"The hooked selector %@ parameters must be NSObject or Bool.", NSStringFromSelector(selector));
+            void *argv = arguments[argIdx].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+//            NSCAssert(NO, @"The hooked selector %@ parameters cannot have primitive type <%s>.", NSStringFromSelector(selector), argt);
         }
     }
     
@@ -504,20 +525,19 @@ static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation 
     } else if (strcmp(argt, @encode(double)) == 0 || strcmp(argt, @encode(float)) == 0) {
         double argv = va_arg(arguments, double);
         [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(char *)) == 0) {
-        char * argv = va_arg(arguments, char *);
+    } else if (argt[0] == _C_PTR) {
+        void * argv = va_arg(arguments, void *);
         [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
-        id val = va_arg(arguments, id);
-        id copiedVal = [val copy];
-        [invocation setArgument:&copiedVal atIndex:idx];
-        return;
     } else if (strcmp(argt, @encode(SEL)) == 0) {
         SEL argv = va_arg(arguments, SEL);
         [invocation setArgument:&argv atIndex:idx];
     } else if (strcmp(argt, @encode(Class)) == 0) {
         Class argv = va_arg(arguments, Class);
         [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
+        id val = va_arg(arguments, id);
+        id copiedVal = [val copy];
+        [invocation setArgument:&copiedVal atIndex:idx];
     } else {
         id argv = va_arg(arguments, id);
         [invocation setArgument:&argv atIndex:idx];
