@@ -96,8 +96,13 @@ class AspectTests: XCTestCase {
             }
         } as AspectBlock)
         
+        #if os(OSX)
+        userA.buy(productName: "MacBook", price: 10000.23, count: 2, indexPath: indexPath)
+        userB.buy(productName: "iPhone", price: 5000, count: 3, indexPath: IndexPath(item: 2, section: 7))
+        #else
         userA.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2), indexPath: indexPath)
         userB.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3), indexPath: IndexPath(item: 2, section: 7))
+        #endif
         
         XCTAssertEqual(invokeCount, 1)
         XCTAssertEqual(userA.productName, "MacBook")
@@ -159,12 +164,21 @@ private class User: NSObject {
         self.count = count.intValue
     }
     
+    #if os(OSX)
+    @objc dynamic func buy(productName: String, price: Double, count: Int, indexPath: IndexPath) {
+        self.productName = productName
+        self.price = price
+        self.count = count
+        self.indexPath = indexPath
+    }
+    #else
     @objc dynamic func buy(productName: String, price: NSNumber, count: NSNumber, indexPath: IndexPath) {
         self.productName = productName
         self.price = price.doubleValue
         self.count = count.intValue
         self.indexPath = indexPath
     }
+    #endif
 }
 
 private class GuestUser: User {}

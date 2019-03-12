@@ -69,7 +69,7 @@ static NSMethodSignature *aop_blockMethodSignature(id block)
     return [NSMethodSignature signatureWithObjCTypes:signature];
 }
 
-static NSMethodSignature *aop_methodSignature(SEL selector, id target)
+static NSMethodSignature *aop_methodSignature(id target, SEL selector)
 {
     BOOL isMetaClass = class_isMetaClass(object_getClass(target));
     NSMethodSignature *signature = isMetaClass ? [[target class] methodSignatureForSelector:selector] : [[target class] instanceMethodSignatureForSelector:selector];
@@ -79,7 +79,7 @@ static NSMethodSignature *aop_methodSignature(SEL selector, id target)
 static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id target, SEL selector)
 {
     BOOL signaturesMatch = YES;
-    NSMethodSignature *methodSignature = aop_methodSignature(selector, target);
+    NSMethodSignature *methodSignature = aop_methodSignature(target, selector);
     if (blockSignature.numberOfArguments > methodSignature.numberOfArguments) {
         signaturesMatch = NO;
     } else {
@@ -328,6 +328,16 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 
 static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id block)
 {
+#if TARGET_OS_MAC
+    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
+        va_list arguments;
+        va_start(arguments, target);
+        
+        SEL originalSelector = aop_aliasForSelector(selector);
+        NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, arguments);
+        
+        va_end(arguments);
+#else
     // On 64-bit ARM varargs routines use different calling conventions from standard routines.
     // Thus implementing a non-varargs method with a varargs block is simply not feasible.
     // This limitation is not just for 64-bit ARM. There are similar differences between varargs
@@ -338,6 +348,7 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
     IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
         SEL originalSelector = aop_aliasForSelector(selector);
         NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
+#endif
         
         if (self != [self class] && self != target) {
             return aop_invokeOriginalInvocation(originalInvocation);
@@ -395,10 +406,23 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
 
 static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char *types)
 {
+#if TARGET_OS_MAC
+    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
+        va_list arguments;
+        va_start(arguments, target);
+        
+        NSInvocation *invocation = aop_originalInvocation(target, selector, arguments);
+        
+        va_end(arguments);
+        
+        return aop_invokeOriginalInvocation(invocation);
+    });
+#else
     IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
         NSInvocation *invocation = aop_originalInvocation(target, selector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
         return aop_invokeOriginalInvocation(invocation);
     });
+#endif
     
     Method method = class_getInstanceMethod(clazz, selector);
     class_addMethod(clazz, aop_aliasForSelector(selector), method_getImplementation(method), types);
@@ -407,6 +431,67 @@ static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char
     return method;
 }
 
+#if TARGET_OS_MAC
+static NSInvocation *aop_originalInvocation(id target, SEL selector, va_list arguments)
+{
+    NSMethodSignature *signature = aop_methodSignature(target, selector);
+    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+    invocation.target = target;
+    invocation.selector = selector;
+    
+    for (int idx = 2; idx < signature.numberOfArguments; idx++) {
+        const char *argtType = [signature getArgumentTypeAtIndex:idx];
+        aop_setupArgument(arguments, argtType, invocation, idx);
+    }
+    
+    return invocation;
+}
+                                               
+static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation *invocation, NSInteger idx)
+{
+    if (strcmp(argt, @encode(int)) == 0 || strcmp(argt, @encode(short)) == 0 || strcmp(argt, @encode(char)) == 0 || strcmp(argt, @encode(BOOL)) == 0 || strcmp(argt, @encode(bool)) == 0) {
+        int argv = va_arg(arguments, int);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(long)) == 0) {
+        long argv = va_arg(arguments, long);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(long long)) == 0) {
+        long long argv = va_arg(arguments, long long);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(unsigned int)) == 0 || strcmp(argt, @encode(unsigned short)) == 0 || strcmp(argt, @encode(unsigned char)) == 0) {
+        unsigned int argv = va_arg(arguments, unsigned int);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(unsigned long)) == 0) {
+        unsigned long argv = va_arg(arguments, unsigned long);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(unsigned long long)) == 0) {
+        unsigned long long argv = va_arg(arguments, unsigned long long);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(double)) == 0 || strcmp(argt, @encode(float)) == 0) {
+        double argv = va_arg(arguments, double);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(char *)) == 0) {
+        char * argv = va_arg(arguments, char *);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
+        id val = va_arg(arguments, id);
+        id copiedVal = [val copy];
+        [invocation setArgument:&copiedVal atIndex:idx];
+        return;
+    } else if (strcmp(argt, @encode(SEL)) == 0) {
+        SEL argv = va_arg(arguments, SEL);
+        [invocation setArgument:&argv atIndex:idx];
+    } else if (strcmp(argt, @encode(Class)) == 0) {
+        Class argv = va_arg(arguments, Class);
+        [invocation setArgument:&argv atIndex:idx];
+    } else {
+        id argv = va_arg(arguments, id);
+        [invocation setArgument:&argv atIndex:idx];
+    }
+}
+                                               
+#else
+                                               
 static NSArray<NSValue *> *aop_fixedArguments(va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6)
 {
     return @[[NSValue valueWithPointer:arg1], [NSValue valueWithPointer:arg2], [NSValue valueWithPointer:arg3],
@@ -415,7 +500,7 @@ static NSArray<NSValue *> *aop_fixedArguments(va_list arg1, va_list arg2, va_lis
 
 static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSValue *> *arguments)
 {
-    NSMethodSignature *signature = aop_methodSignature(selector, target);
+    NSMethodSignature *signature = aop_methodSignature(target, selector);
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
     invocation.target = target;
     invocation.selector = selector;
@@ -438,6 +523,7 @@ static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSV
     
     return invocation;
 }
+#endif
 
 static void* aop_invokeOriginalInvocation(NSInvocation *invocation)
 {
