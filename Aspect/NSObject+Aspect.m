@@ -328,16 +328,7 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 
 static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id block)
 {
-#if TARGET_OS_MAC
-    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
-        va_list arguments;
-        va_start(arguments, target);
-        
-        SEL originalSelector = aop_aliasForSelector(selector);
-        NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, arguments);
-        
-        va_end(arguments);
-#else
+#if TARGET_OS_IPHONE
     // On 64-bit ARM varargs routines use different calling conventions from standard routines.
     // Thus implementing a non-varargs method with a varargs block is simply not feasible.
     // This limitation is not just for 64-bit ARM. There are similar differences between varargs
@@ -348,6 +339,15 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
     IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
         SEL originalSelector = aop_aliasForSelector(selector);
         NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
+#else
+    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
+        va_list arguments;
+        va_start(arguments, target);
+        
+        SEL originalSelector = aop_aliasForSelector(selector);
+        NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, arguments);
+        
+        va_end(arguments);
 #endif
         
         if (self != [self class] && self != target) {
@@ -406,7 +406,12 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
 
 static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char *types)
 {
-#if TARGET_OS_MAC
+#if TARGET_OS_IPHONE
+    IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
+        NSInvocation *invocation = aop_originalInvocation(target, selector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
+        return aop_invokeOriginalInvocation(invocation);
+    });
+#else
     IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
         va_list arguments;
         va_start(arguments, target);
@@ -415,11 +420,6 @@ static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char
         
         va_end(arguments);
         
-        return aop_invokeOriginalInvocation(invocation);
-    });
-#else
-    IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
-        NSInvocation *invocation = aop_originalInvocation(target, selector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
         return aop_invokeOriginalInvocation(invocation);
     });
 #endif
@@ -431,7 +431,41 @@ static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char
     return method;
 }
 
-#if TARGET_OS_MAC
+#if TARGET_OS_IPHONE
+static NSArray<NSValue *> *aop_fixedArguments(va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6)
+{
+    return @[[NSValue valueWithPointer:arg1], [NSValue valueWithPointer:arg2], [NSValue valueWithPointer:arg3],
+             [NSValue valueWithPointer:arg4], [NSValue valueWithPointer:arg5], [NSValue valueWithPointer:arg6]];
+}
+                                           
+static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSValue *> *arguments)
+{
+    NSMethodSignature *signature = aop_methodSignature(target, selector);
+    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+    invocation.target = target;
+    invocation.selector = selector;
+    
+    NSCAssert(signature.numberOfArguments <= arguments.count, @"The hooked selector %@ parameter count cannot great than 6.", NSStringFromSelector(selector));
+    
+    for (int idx = 2; idx < signature.numberOfArguments; idx++) {
+        const char *argt = [signature getArgumentTypeAtIndex:idx];
+        
+        if (strcmp(argt, @encode(id)) == 0) {
+            void *argv = arguments[idx - 2].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else if (strcmp(argt, @encode(BOOL)) == 0) {
+            BOOL argv = (BOOL)arguments[idx - 2].pointerValue;
+            [invocation setArgument:&argv atIndex:idx];
+        } else {
+            NSCAssert(NO, @"The hooked selector %@ parameters must be NSObject or Bool.", NSStringFromSelector(selector));
+        }
+    }
+    
+    return invocation;
+}
+
+#else
+
 static NSInvocation *aop_originalInvocation(id target, SEL selector, va_list arguments)
 {
     NSMethodSignature *signature = aop_methodSignature(target, selector);
@@ -446,7 +480,7 @@ static NSInvocation *aop_originalInvocation(id target, SEL selector, va_list arg
     
     return invocation;
 }
-                                               
+                                           
 static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation *invocation, NSInteger idx)
 {
     if (strcmp(argt, @encode(int)) == 0 || strcmp(argt, @encode(short)) == 0 || strcmp(argt, @encode(char)) == 0 || strcmp(argt, @encode(BOOL)) == 0 || strcmp(argt, @encode(bool)) == 0) {
@@ -488,40 +522,6 @@ static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation 
         id argv = va_arg(arguments, id);
         [invocation setArgument:&argv atIndex:idx];
     }
-}
-                                               
-#else
-                                               
-static NSArray<NSValue *> *aop_fixedArguments(va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6)
-{
-    return @[[NSValue valueWithPointer:arg1], [NSValue valueWithPointer:arg2], [NSValue valueWithPointer:arg3],
-             [NSValue valueWithPointer:arg4], [NSValue valueWithPointer:arg5], [NSValue valueWithPointer:arg6]];
-}
-
-static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSValue *> *arguments)
-{
-    NSMethodSignature *signature = aop_methodSignature(target, selector);
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-    invocation.target = target;
-    invocation.selector = selector;
-    
-    NSCAssert(signature.numberOfArguments <= arguments.count, @"The hooked selector %@ parameter count cannot great than 6.", NSStringFromSelector(selector));
-    
-    for (int idx = 2; idx < signature.numberOfArguments; idx++) {
-        const char *argt = [signature getArgumentTypeAtIndex:idx];
-        
-        if (strcmp(argt, @encode(id)) == 0) {
-            void *argv = arguments[idx - 2].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (strcmp(argt, @encode(BOOL)) == 0) {
-            BOOL argv = (BOOL)arguments[idx - 2].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else {
-            NSCAssert(NO, @"The hooked selector %@ parameters must be NSObject or Bool.", NSStringFromSelector(selector));
-        }
-    }
-    
-    return invocation;
 }
 #endif
 
