@@ -63,6 +63,7 @@ class AspectTests: XCTestCase {
         } as AspectBlock)
         
         session.getAllTasks { (tasks) in
+            sleep(1)
             invokeCount += 1
             XCTAssertEqual(invokeCount, 2)
         }

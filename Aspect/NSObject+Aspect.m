@@ -476,9 +476,7 @@ static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSV
             void *argv = arguments[argIdx].pointerValue;
             [invocation setArgument:&argv atIndex:idx];
         } else {
-            void *argv = arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-//            NSCAssert(NO, @"The hooked selector %@ parameters cannot have primitive type <%s>.", NSStringFromSelector(selector), argt);
+            NSCAssert(NO, @"The hooked selector %@ parameters cannot have primitive type <%s>.", NSStringFromSelector(selector), argt);
         }
     }
     
@@ -535,12 +533,14 @@ static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation 
         Class argv = va_arg(arguments, Class);
         [invocation setArgument:&argv atIndex:idx];
     } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
-        id val = va_arg(arguments, id);
-        id copiedVal = [val copy];
+        id argv = va_arg(arguments, id);
+        id copiedVal = [argv copy];
         [invocation setArgument:&copiedVal atIndex:idx];
-    } else {
+    } else if (strcmp(argt, @encode(id)) == 0) {
         id argv = va_arg(arguments, id);
         [invocation setArgument:&argv atIndex:idx];
+    } else {
+        NSCAssert(NO, @"The hooked selector parameters cannot have struct/union type <%s>.", argt);
     }
 }
 #endif
