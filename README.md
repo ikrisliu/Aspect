@@ -13,15 +13,7 @@ Aspect Oriented Programming in Objective-C and Swift. (For swift, the method mus
 - Hook methods with same name in different classes
 
 ## Installation
-### Swift Package Manager
-[Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. To integrate Aspect into your Xcode project, specify it in your `Package.swift`.
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/iKrisLiu/Aspect", from: "1.0.0")
-]
-```
-
+### Carthage
 [Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependencies and provides you with binary frameworks. To integrate Aspect into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
@@ -33,6 +25,15 @@ github "iKrisLiu/Aspect" ~> 1.0
 
 ```ruby
 pod 'Aspect', '~> 1.0'
+```
+
+### Swift Package Manager
+[Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. To integrate Aspect into your Xcode project, specify it in your `Package.swift`.
+
+```swift
+dependencies: [
+.package(url: "https://github.com/iKrisLiu/Aspect", from: "1.0.0")
+]
 ```
 
 ## Usage
