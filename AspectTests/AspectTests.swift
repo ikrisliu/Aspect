@@ -15,12 +15,12 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let objc = NSObject()
         
-        objc.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
+        objc.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect, selector in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
             XCTAssertEqual(aspect.arguments.first as? String, "invalidSelector")
-        } as AspectBlock)
+        } as @convention(block) (AspectObject, Selector) -> Void)
         
         objc.doesNotRecognizeSelector(NSSelectorFromString("invalidSelector"))
         
@@ -53,16 +53,16 @@ class AspectTests: XCTestCase {
     
     func testHookMethodWithBlockType() {
         var invokeCount = 0
-        let session = URLSession(configuration: .default)
+        let operation = BlockOperation()
         
-        session.hookSelector(with: #selector(URLSession.getAllTasks(completionHandler:)), position: .after, usingBlock: { aspect in
+        operation.hookSelector(with: #selector(BlockOperation.addExecutionBlock(_:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
             XCTAssertNotNil(aspect.arguments.first)
         } as AspectBlock)
         
-        session.getAllTasks { (tasks) in
+        operation.addExecutionBlock {
             sleep(1)
             invokeCount += 1
             XCTAssertEqual(invokeCount, 2)
@@ -136,6 +136,73 @@ class AspectTests: XCTestCase {
     }
     
     func testAfterHookSelectorOfOneInstance() {
+        var invokeCount = 0
+        let user = UserAfter()
+        
+        user.hookSelector(with: #selector(UserAfter.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            let target = aspect.instance as! UserAfter
+            XCTAssertNotNil(target)
+            XCTAssertNotNil(target.productName)
+            } as AspectBlock)
+        
+        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
+        
+        XCTAssertEqual(invokeCount, 1)
+        XCTAssertNotNil(user.productName)
+    }
+    
+    func testHookCustomObjectWithBlock() {
+        var invokeCount = 0
+        let user = RegisterUser()
+        
+        user.hookSelector(with: #selector(RegisterUser.buy(products:completion:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            if let target = aspect.instance as? RegisterUser {
+                XCTAssertEqual(target, user)
+                XCTAssertEqual(target.productName, "MacBook")
+                XCTAssertEqual(target.price, 10000.23)
+                XCTAssertEqual(target.count, 2)
+                XCTAssertNotNil(target.completion)
+            } else {
+                XCTAssertNotNil(aspect.instance)
+            }
+            } as AspectBlock)
+        
+        let computer = Product(name: "MacBook", type: .computer, price: 10000.23, count: 2)
+        user.buy(products: [computer], completion: { _ in })
+        
+        XCTAssertEqual(invokeCount, 1)
+    }
+    
+    func testHookCustomObjectWithError() {
+        var invokeCount = 0
+        let user = RegisterUser()
+        let indexPath = IndexPath(item: 5, section: 10)
+        
+        user.hookSelector(with: #selector(RegisterUser.buy(product:indexPath:error:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            if let target = aspect.instance as? RegisterUser {
+                XCTAssertEqual(target, user)
+                XCTAssertEqual(target.productName, "MacBook")
+                XCTAssertEqual(target.price, 10000.23)
+                XCTAssertEqual(target.count, 2)
+                XCTAssertEqual(target.indexPath, indexPath)
+                XCTAssertNotNil(target.error)
+            } else {
+                XCTAssertNotNil(aspect.instance)
+            }
+            } as AspectBlock)
+        
+        let computer = Product(name: "MacBook", type: .computer, price: 10000.23, count: 2)
+        user.buy(product: computer, indexPath: indexPath, error: NSError(domain: "com.error", code: -1, userInfo: nil))
+        
+        XCTAssertEqual(invokeCount, 1)
+    }
+    
+    func testHookSelectorWithMultipleTypeArguments() {
         var invokeCount = 0
         let userA = RegisterUser()
         let userB = RegisterUser()
@@ -240,10 +307,13 @@ private class User: NSObject {
     
     var loginType: LoginType?
     
-    var productName: String?
-    var price: Double?
-    var count: Int?
+    var products: [Product] = []
+    var productName: String!
+    var price: Double!
+    var count: Int!
     var indexPath: IndexPath?
+    var completion: ((Bool) -> Void)?
+    var error: NSError?
     
     @objc dynamic static func exit() {}
     
@@ -272,13 +342,49 @@ private class User: NSObject {
         self.indexPath = indexPath
     }
     #endif
+    
+    @objc dynamic func buy(products: [Product], completion: ((Bool) -> Void)?) {
+        self.products = products
+        self.productName = products.first?.name
+        self.price = products.first?.price
+        self.count = products.first?.count
+        self.completion = completion
+    }
+    
+    @objc dynamic func buy(product: Product, indexPath: IndexPath, error: NSError?) {
+        self.productName = product.name
+        self.price = product.price
+        self.count = product.count
+        self.indexPath = indexPath
+        self.error = error
+    }
 }
 
 private class GuestUser: User {}
 private class RegisterUser: User {}
+private class UserAfter: User {}
 private class UserBefore: User {}
 private class UserInstead: User {}
 
+private class Product: NSObject {
+    
+    enum ProductType: Int {
+        case phone
+        case computer
+    }
+    
+    let name: String
+    let type: ProductType
+    let price: Double
+    let count: Int
+    
+    init(name: String, type: ProductType, price: Double, count: Int) {
+        self.name = name
+        self.type = type
+        self.price = price
+        self.count = count
+    }
+}
 
 private class Cat: NSObject {
     

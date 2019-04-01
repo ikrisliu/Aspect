@@ -40,30 +40,33 @@ dependencies: [
 
 Aspect hooks will add a block of code **after/before/instead** the current `selector`
 
-```swift
-NSObject.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
-    print("Do something in this block")
-} as AspectBlock)
+### Swift
 
+```swift
 // Hook method "viewDidAppear" of all UIViewController's instances
-UIViewController.hookSelector(with: #selector(UIViewController.viewDidAppear(_:)), position: .after, usingBlock: { aspect in
+UIViewController.hookSelector(with: #selector(UIViewController.viewDidAppear(_:)), position: .after, usingBlock: { aspect, animated in
     print("Do something in this block")
-} as AspectBlock)
+} as @convention(block) (AspectObject, Bool) -> Void)
 
 // Hook only viewController's instance "viewDidLoad"
 let viewController = UIViewController()
 viewController.hookSelector(with: #selector(UIViewController.viewDidLoad), position: .before, usingBlock: { aspect in
     print("Do something in this block")
 } as AspectBlock)
+
+NSObject.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
+    print("Do something in this block")
+} as AspectBlock)
 ```
 
+### Objective-C
 ```objective-c
-[NSURLSession hookSelectorWith:@selector(sessionWithConfiguration:) position:AspectPositionBefore usingBlock:^{
+[NSURLSession hookSelectorWith:@selector(sessionWithConfiguration:) position:AspectPositionBefore usingBlock:^(AspectObject *aspect, NSURLSessionConfiguration *configuration){
     NSLog(@"Do something in this block")
 }];
 
 NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.defaultSessionConfiguration];
-[session hookSelectorWith:@selector(getAllTasksWithCompletionHandler:) position:AspectPositionAfter usingBlock:^{
+[session hookSelectorWith:@selector(getAllTasksWithCompletionHandler:) position:AspectPositionAfter usingBlock:^(AspectObject *aspect){
     NSLog(@"Do something in this block");
 }];
 ```
