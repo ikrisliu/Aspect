@@ -35,8 +35,11 @@ typedef NS_ENUM(NSUInteger, AspectPosition) {
 /// DO NOT hook ViewController.viewDidLoad and UIViewController.viewDidLoad at the same time
 @interface NSObject (Aspect)
 
-+ (BOOL)hookSelectorWith:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
-- (BOOL)hookSelectorWith:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
++ (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
+- (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
+
++ (void)unhookSelector:(SEL)selector;
+- (void)unhookSelector:(SEL)selector;
 
 @end
 

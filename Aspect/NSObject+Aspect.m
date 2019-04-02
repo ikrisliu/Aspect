@@ -316,14 +316,32 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 #pragma mark -
 @implementation NSObject (Aspect)
 
-+ (BOOL)hookSelectorWith:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
++ (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
 {
     return aop_hookSelector(self, selector, position, block);
 }
 
-- (BOOL)hookSelectorWith:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
+- (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
 {
     return aop_hookSelector(self, selector, position, block);
+}
+
++ (void)unhookSelector:(SEL)selector
+{
+    SEL originalSelector = aop_aliasForSelector(selector);
+    Method originalMethod = class_getInstanceMethod(self, originalSelector);
+    originalMethod = originalMethod ?: class_getClassMethod(self, originalSelector);
+    IMP imp = method_getImplementation(originalMethod);
+    
+    Method method = class_getInstanceMethod(self, selector);
+    method = method ?: class_getClassMethod(self, selector);
+    
+    method_setImplementation(method, imp);
+}
+
+- (void)unhookSelector:(SEL)selector
+{
+    [self.class unhookSelector:selector];
 }
 
 static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id block)

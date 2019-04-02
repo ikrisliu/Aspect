@@ -19,7 +19,7 @@
     __block NSUInteger invokeCount = 0;
     NSURLSessionConfiguration *conf = NSURLSessionConfiguration.defaultSessionConfiguration;
     
-    [NSURLSession hookSelectorWith:@selector(sessionWithConfiguration:) position:AspectPositionAfter usingBlock:^(AspectObject *aspect, NSURLSessionConfiguration *configuration){
+    [NSURLSession hookSelector:@selector(sessionWithConfiguration:) position:AspectPositionAfter usingBlock:^(AspectObject *aspect, NSURLSessionConfiguration *configuration){
         invokeCount += 1;
         
         XCTAssertNotNil(aspect.instance);
@@ -37,7 +37,7 @@
     __block NSUInteger invokeCount = 0;
     NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSessionConfiguration.defaultSessionConfiguration];
     
-    [session hookSelectorWith:@selector(getAllTasksWithCompletionHandler:) position:AspectPositionAfter usingBlock:^(AspectObject *aspect){
+    [session hookSelector:@selector(getAllTasksWithCompletionHandler:) position:AspectPositionAfter usingBlock:^(AspectObject *aspect){
         invokeCount += 1;
         
         XCTAssertNotNil(aspect.instance);

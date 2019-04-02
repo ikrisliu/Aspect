@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'Aspect'
-  s.version = '1.1.0'
+  s.version = '1.2.0'
   s.license = 'MIT'
   s.summary = 'Aspect Oriented Programming in Objective-C and Swift'
   s.homepage = 'https://github.com/iKrisLiu/Aspect'

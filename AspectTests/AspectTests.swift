@@ -15,7 +15,7 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let objc = NSObject()
         
-        objc.hookSelector(with: #selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect, selector in
+        objc.hook(#selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect, selector in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
@@ -31,13 +31,13 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let str = NSString(string: "abc")
         
-        str.hookSelector(with: #selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
+        str.hook(#selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
 
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
-        str.hookSelector(with: #selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
+        str.hook(#selector(NSString.getCharacters(_:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
@@ -55,7 +55,7 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let operation = BlockOperation()
         
-        operation.hookSelector(with: #selector(BlockOperation.addExecutionBlock(_:)), position: .after, usingBlock: { aspect in
+        operation.hook(#selector(BlockOperation.addExecutionBlock(_:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
@@ -73,10 +73,10 @@ class AspectTests: XCTestCase {
     
     func testAfterHookSelectorOfAllInstances() {
         var invokeCount = 0
-        let userA = GuestUser()
-        let userB = GuestUser()
+        let userA = UserAfter()
+        let userB = UserAfter()
         
-        GuestUser.hookSelector(with: #selector(User.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+        UserAfter.hook(#selector(UserAfter.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? User else { XCTFail(); return }
             
@@ -101,7 +101,7 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let user = UserBefore()
         
-        UserBefore.hookSelector(with: #selector(UserBefore.buy(productName:price:count:)), position: .before, usingBlock: { aspect in
+        UserBefore.hook(#selector(UserBefore.buy(productName:price:count:)), position: .before, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? UserBefore else { XCTFail(); return }
             
@@ -121,7 +121,7 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let user = UserInstead()
         
-        UserInstead.hookSelector(with: #selector(UserInstead.buy(productName:price:count:)), position: .instead, usingBlock: { aspect in
+        UserInstead.hook(#selector(UserInstead.buy(productName:price:count:)), position: .instead, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? UserInstead else { XCTFail(); return }
             
@@ -137,14 +137,14 @@ class AspectTests: XCTestCase {
     
     func testAfterHookSelectorOfOneInstance() {
         var invokeCount = 0
-        let user = UserAfter()
+        let user = RegisterUser()
         
-        user.hookSelector(with: #selector(UserAfter.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+        user.hook(#selector(RegisterUser.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
-            let target = aspect.instance as! UserAfter
+            let target = aspect.instance as! RegisterUser
             XCTAssertNotNil(target)
             XCTAssertNotNil(target.productName)
-            } as AspectBlock)
+        } as AspectBlock)
         
         user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
         
@@ -156,7 +156,7 @@ class AspectTests: XCTestCase {
         var invokeCount = 0
         let user = RegisterUser()
         
-        user.hookSelector(with: #selector(RegisterUser.buy(products:completion:)), position: .after, usingBlock: { aspect in
+        user.hook(#selector(RegisterUser.buy(products:completion:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             if let target = aspect.instance as? RegisterUser {
@@ -168,7 +168,7 @@ class AspectTests: XCTestCase {
             } else {
                 XCTAssertNotNil(aspect.instance)
             }
-            } as AspectBlock)
+        } as AspectBlock)
         
         let computer = Product(name: "MacBook", type: .computer, price: 10000.23, count: 2)
         user.buy(products: [computer], completion: { _ in })
@@ -181,7 +181,7 @@ class AspectTests: XCTestCase {
         let user = RegisterUser()
         let indexPath = IndexPath(item: 5, section: 10)
         
-        user.hookSelector(with: #selector(RegisterUser.buy(product:indexPath:error:)), position: .after, usingBlock: { aspect in
+        user.hook(#selector(RegisterUser.buy(product:indexPath:error:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             if let target = aspect.instance as? RegisterUser {
@@ -194,7 +194,7 @@ class AspectTests: XCTestCase {
             } else {
                 XCTAssertNotNil(aspect.instance)
             }
-            } as AspectBlock)
+        } as AspectBlock)
         
         let computer = Product(name: "MacBook", type: .computer, price: 10000.23, count: 2)
         user.buy(product: computer, indexPath: indexPath, error: NSError(domain: "com.error", code: -1, userInfo: nil))
@@ -208,7 +208,7 @@ class AspectTests: XCTestCase {
         let userB = RegisterUser()
         let indexPath = IndexPath(item: 5, section: 10)
         
-        userA.hookSelector(with: #selector(RegisterUser.buy(productName:price:count:indexPath:)), position: .after, usingBlock: { aspect in
+        userA.hook(#selector(RegisterUser.buy(productName:price:count:indexPath:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             if let target = aspect.instance as? RegisterUser {
@@ -241,12 +241,12 @@ class AspectTests: XCTestCase {
         var invokeACount = 0
         var invokeBCount = 0
         
-        Cat.hookSelector(with: #selector(Cat.run), position: .after, usingBlock: { aspect in
+        Cat.hook(#selector(Cat.run), position: .after, usingBlock: { aspect in
             invokeACount += 1
             XCTAssertNotNil(aspect.instance)
             } as AspectBlock)
         
-        Dog.hookSelector(with: #selector(Dog.run), position: .after, usingBlock: { aspect in
+        Dog.hook(#selector(Dog.run), position: .after, usingBlock: { aspect in
             invokeBCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
@@ -260,32 +260,16 @@ class AspectTests: XCTestCase {
     
     func testHookMethodWithEnumAndBoolType() {
         var invokeCount = 0
-        
-        User.hookSelector(with: #selector(User.exit), position: .after, usingBlock: { aspect in
-            invokeCount += 1
-            
-            XCTAssertNotNil(aspect.instance)
-            XCTAssertEqual(aspect.arguments.count, 0)
-        } as AspectBlock)
-        
-        User.exit()
-        User.exit()
-        
-        XCTAssertEqual(invokeCount, 2)
-    }
-    
-    func testHookNoImplementationSelector() {
-        var invokeCount = 0
         let userA = User()
         let userB = User()
         
-        User.hookSelector(with: #selector(RegisterUser.login(type:needPassword:)), position: .after, usingBlock: { aspect in
+        User.hook(#selector(User.login(type:needPassword:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             
             XCTAssertNotNil(aspect.instance)
             XCTAssertEqual(aspect.arguments.count, 2)
             XCTAssertEqual(aspect.arguments.last as! Bool, true)
-            } as AspectBlock)
+        } as AspectBlock)
         
         userA.login(type: .mobile, needPassword: true)
         userB.login(type: .email, needPassword: true)
@@ -293,6 +277,42 @@ class AspectTests: XCTestCase {
         XCTAssertEqual(invokeCount, 2)
         XCTAssertEqual(userA.loginType, LoginType.mobile)
         XCTAssertEqual(userB.loginType, LoginType.email)
+    }
+    
+    func testHookNoImplementationSelector() {
+        var invokeCount = 0
+        let user = User()
+        
+        User.hook(#selector(User.exit), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.count, 0)
+        } as AspectBlock)
+        
+        user.exit()
+        user.exit()
+        
+        XCTAssertEqual(invokeCount, 2)
+    }
+    
+    func testHookAndUnhookMethod() {
+        var invokeCount = 0
+        let user = User()
+        
+        User.hook(#selector(User.logout), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.count, 0)
+        } as AspectBlock)
+        
+        user.logout()
+        XCTAssertEqual(invokeCount, 1)
+        
+        user.unhookSelector(#selector(User.logout))
+        user.logout()
+        XCTAssertEqual(invokeCount, 1)
     }
 }
 
@@ -315,7 +335,8 @@ private class User: NSObject {
     var completion: ((Bool) -> Void)?
     var error: NSError?
     
-    @objc dynamic static func exit() {}
+    @objc dynamic func exit() {}
+    @objc dynamic func logout() {}
     
     @objc dynamic func login(type: LoginType, needPassword: Bool) {
         loginType = type
@@ -360,7 +381,6 @@ private class User: NSObject {
     }
 }
 
-private class GuestUser: User {}
 private class RegisterUser: User {}
 private class UserAfter: User {}
 private class UserBefore: User {}
