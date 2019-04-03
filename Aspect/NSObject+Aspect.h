@@ -38,8 +38,8 @@ typedef NS_ENUM(NSUInteger, AspectPosition) {
 + (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
 - (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
 
-+ (void)unhookSelector:(SEL)selector;
-- (void)unhookSelector:(SEL)selector;
++ (BOOL)unhookSelector:(SEL)selector;
+- (BOOL)unhookSelector:(SEL)selector;
 
 @end
 

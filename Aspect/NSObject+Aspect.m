@@ -19,7 +19,7 @@
 })
 
 
-static NSString *const kAliasSelectorPrefix = @"original_";
+static NSString *const kAliasSelectorPrefix = @"aspect_";
 
 #pragma mark - Block Type
 #pragma mark -
@@ -326,22 +326,14 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
     return aop_hookSelector(self, selector, position, block);
 }
 
-+ (void)unhookSelector:(SEL)selector
++ (BOOL)unhookSelector:(SEL)selector
 {
-    SEL originalSelector = aop_aliasForSelector(selector);
-    Method originalMethod = class_getInstanceMethod(self, originalSelector);
-    originalMethod = originalMethod ?: class_getClassMethod(self, originalSelector);
-    IMP imp = method_getImplementation(originalMethod);
-    
-    Method method = class_getInstanceMethod(self, selector);
-    method = method ?: class_getClassMethod(self, selector);
-    
-    method_setImplementation(method, imp);
+    return aop_unhookSelector(self, selector);
 }
 
-- (void)unhookSelector:(SEL)selector
+- (BOOL)unhookSelector:(SEL)selector
 {
-    [self.class unhookSelector:selector];
+    return aop_unhookSelector(self, selector);
 }
 
 static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id block)
@@ -355,8 +347,8 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
     // So we can only use below work around solution to limit the argument count for ARM64.
     // https://developer.apple.com/documentation/uikit/core_app/updating_your_app_from_32-bit_to_64-bit_architecture/managing_functions_and_function_pointers
     IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
-        SEL originalSelector = aop_aliasForSelector(selector);
-        NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
+        SEL aliasSelector = aop_aliasForSelector(selector);
+        NSInvocation *originalInvocation = aop_originalInvocation(target, aliasSelector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
 #else
     IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
         va_list arguments;
@@ -401,8 +393,11 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
         log_debug("Hooked selector <%@> doesn't exist in class <%@>", NSStringFromSelector(selector), NSStringFromClass(clazz));
         return NO;
     }
+        
+    Method aliasMethod = class_getInstanceMethod(clazz, aop_aliasForSelector(selector));
     
-    if (class_getInstanceMethod(clazz, aop_aliasForSelector(selector))) {
+    // If alias method does exist and is not empty implementation which means it is unhooked.
+    if (aliasMethod && method_getImplementation(aliasMethod) != (IMP)aop_emptyImplementationSelector) {
         log_debug("The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
         return YES;
     }
@@ -415,7 +410,9 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
     if (class_addMethod(clazz, selector, imp, types)) {
         method = aop_addOverrideMethodAndHook(clazz, selector, types);
     } else {
-        class_addMethod(clazz, aop_aliasForSelector(selector), imp, types);
+        if (!class_addMethod(clazz, aop_aliasForSelector(selector), imp, types)) {
+            method_setImplementation(aliasMethod, imp);
+        }
     }
     
     method_setImplementation(method, blockIMP);
@@ -586,6 +583,30 @@ static void* aop_invokeHookedBlock(id self, SEL selector, id block, NSInvocation
 static SEL aop_aliasForSelector(SEL selector)
 {
     return NSSelectorFromString([kAliasSelectorPrefix stringByAppendingString:NSStringFromSelector(selector)]);
+}
+                                               
+static void aop_emptyImplementationSelector(id self, SEL _cmd) { }
+
+static BOOL aop_unhookSelector(id self, SEL selector)
+{
+    SEL aliasSelector = aop_aliasForSelector(selector);
+    Method aliasMethod = class_getInstanceMethod([self class], aliasSelector);
+    aliasMethod = aliasMethod ?: class_getClassMethod([self class], aliasSelector);
+    
+    if (aliasMethod == NULL) {
+        log_debug("No hook for selector <%@> in class <%@>", NSStringFromSelector(selector), NSStringFromClass([self class]));
+        return NO;
+    }
+    
+    Method method = class_getInstanceMethod([self class], selector);
+    method = method ?: class_getClassMethod([self class], selector);
+    
+    IMP originalIMP = method_getImplementation(aliasMethod);
+    method_setImplementation(method, originalIMP);
+    
+    method_setImplementation(aliasMethod, (IMP)aop_emptyImplementationSelector);
+    
+    return YES;
 }
 
 @end
