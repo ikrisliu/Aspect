@@ -457,10 +457,15 @@ static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSV
 {
     NSMethodSignature *signature = aop_methodSignature(target, selector);
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+    
+    // Sometimes the target's memory may be released that lead crash when call instance hook method, need call below method to retain it.
+    [invocation retainArguments];
+    
     invocation.target = target;
     invocation.selector = selector;
     
-    NSCAssert(signature.numberOfArguments <= arguments.count, @"The hooked selector %@ parameter count cannot great than 6.", NSStringFromSelector(selector));
+    // Excludes the first and second arguement
+    NSCAssert(signature.numberOfArguments - 2 <= arguments.count, @"The hooked selector %@ parameter count cannot great than %tu.", NSStringFromSelector(selector), arguments.count);
     
     for (int idx = 2; idx < signature.numberOfArguments; idx++) {
         const char *argt = [signature getArgumentTypeAtIndex:idx];
