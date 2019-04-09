@@ -73,36 +73,42 @@ class AspectTests: XCTestCase {
     
     func testAfterHookSelectorOfAllInstances() {
         var invokeCount = 0
+        let size = CGSize(width: 20.45, height: 30.3)
         let userA = User()
         let userB = User()
         
-        User.hook(#selector(User.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+        User.hook(#selector(User.buy(productName:price:count:size:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? User else { XCTFail(); return }
             
             XCTAssertNotNil(aspect.instance)
             XCTAssertNotNil(target.productName)
-            XCTAssertEqual(aspect.arguments.count, 3)
+            XCTAssertNotNil(target.price)
+            XCTAssertNotNil(target.size)
+            XCTAssertEqual(aspect.arguments.count, 4)
         } as AspectBlock)
         
-        userA.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2))
-        userB.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3))
+        userA.buy(productName: "MacBook", price: 10000.23, count: 2, size: .zero)
+        userB.buy(productName: "iPhone", price: 5000, count: 5, size: size)
         
         XCTAssertEqual(invokeCount, 2)
         XCTAssertEqual(userA.productName, "MacBook")
         XCTAssertEqual(userA.price, 10000.23)
         XCTAssertEqual(userA.count, 2)
+        XCTAssertEqual(userA.size, CGSize.zero)
         XCTAssertEqual(userB.productName, "iPhone")
         XCTAssertEqual(userB.price, 5000)
-        XCTAssertEqual(userB.count, 3)
+        XCTAssertEqual(userB.count, 5)
+        XCTAssertEqual(userB.size, size)
     }
     
     func testBeforeHookSelectorOfAllInstances() {
         var invokeCount = 0
+        let size = CGSize(width: 10, height: 20)
         let user = User()
         
-        User.unhookSelector(#selector(User.buy(productName:price:count:)))
-        User.hook(#selector(User.buy(productName:price:count:)), position: .before, usingBlock: { aspect in
+        User.unhookSelector(#selector(User.buy(productName:price:count:size:)))
+        User.hook(#selector(User.buy(productName:price:count:size:)), position: .before, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? User else { XCTFail(); return }
             
@@ -110,20 +116,22 @@ class AspectTests: XCTestCase {
             XCTAssertNil(target.productName)
         } as AspectBlock)
         
-        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 5))
+        user.buy(productName: "MacBook", price: 10000, count: 5, size: size)
         
         XCTAssertEqual(invokeCount, 1)
         XCTAssertEqual(user.productName, "MacBook")
         XCTAssertEqual(user.price, 10000)
         XCTAssertEqual(user.count, 5)
+        XCTAssertEqual(user.size, size)
     }
     
     func testInsteadHookSelectorOfAllInstances() {
         var invokeCount = 0
+        let size = CGSize(width: 100, height: 200)
         let user = User()
         
-        User.unhookSelector(#selector(User.buy(productName:price:count:)))
-        User.hook(#selector(User.buy(productName:price:count:)), position: .instead, usingBlock: { aspect in
+        User.unhookSelector(#selector(User.buy(productName:price:count:size:)))
+        User.hook(#selector(User.buy(productName:price:count:size:)), position: .instead, usingBlock: { aspect in
             invokeCount += 1
             guard let target = aspect.instance as? User else { XCTFail(); return }
             
@@ -131,7 +139,7 @@ class AspectTests: XCTestCase {
             XCTAssertNil(target.productName)
         } as AspectBlock)
         
-        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
+        user.buy(productName: "MacBook", price: 10000, count: 2, size: size)
         
         XCTAssertEqual(invokeCount, 1)
         XCTAssertNil(user.productName)
@@ -139,20 +147,23 @@ class AspectTests: XCTestCase {
     
     func testAfterHookSelectorOfOneInstance() {
         var invokeCount = 0
-        let user = User()
+        let size = CGSize(width: 320, height: 640)
+        let userA = User()
+        let userB = User()
         
-        user.unhookSelector(#selector(User.buy(productName:price:count:)))
-        user.hook(#selector(User.buy(productName:price:count:)), position: .after, usingBlock: { aspect in
+        userA.unhookSelector(#selector(User.buy(productName:price:count:size:)))
+        userA.hook(#selector(User.buy(productName:price:count:size:)), position: .after, usingBlock: { aspect in
             invokeCount += 1
             let target = aspect.instance as! User
             XCTAssertNotNil(target)
             XCTAssertNotNil(target.productName)
         } as AspectBlock)
         
-        user.buy(productName: "MacBook", price: NSNumber(value: 10000), count: NSNumber(value: 2))
+        userA.buy(productName: "MacBook", price: 10000.78, count: 2, size: size)
+        userB.buy(productName: "iPhone", price: 5000, count: 5, size: size)
         
         XCTAssertEqual(invokeCount, 1)
-        XCTAssertNotNil(user.productName)
+        XCTAssertNotNil(userA.productName)
     }
     
     func testHookCustomObjectWithBlock() {
@@ -226,13 +237,8 @@ class AspectTests: XCTestCase {
             }
         } as AspectBlock)
         
-        #if os(OSX)
         userA.buy(productName: "MacBook", price: 10000.23, count: 2, indexPath: indexPath)
         userB.buy(productName: "iPhone", price: 5000, count: 3, indexPath: IndexPath(item: 2, section: 7))
-        #else
-        userA.buy(productName: "MacBook", price: NSNumber(value: 10000.23), count: NSNumber(value: 2), indexPath: indexPath)
-        userB.buy(productName: "iPhone", price: NSNumber(value: 5000), count: NSNumber(value: 3), indexPath: IndexPath(item: 2, section: 7))
-        #endif
         
         XCTAssertEqual(invokeCount, 1)
         XCTAssertEqual(userA.productName, "MacBook")
@@ -243,19 +249,21 @@ class AspectTests: XCTestCase {
     func testHookSameSelectorInDistinctClasses() {
         var invokeACount = 0
         var invokeBCount = 0
+        let cat = Cat()
+        let dog = Dog()
         
         Cat.hook(#selector(Cat.run), position: .after, usingBlock: { aspect in
             invokeACount += 1
             XCTAssertNotNil(aspect.instance)
-            } as AspectBlock)
+        } as AspectBlock)
         
         Dog.hook(#selector(Dog.run), position: .after, usingBlock: { aspect in
             invokeBCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
-        Cat.run()
-        Dog.run()
+        cat.run()
+        dog.run()
         
         XCTAssertEqual(invokeACount, 1)
         XCTAssertEqual(invokeBCount, 1)
@@ -274,15 +282,25 @@ class AspectTests: XCTestCase {
             XCTAssertEqual(aspect.arguments.last as! Bool, true)
         } as AspectBlock)
         
+        userA.hook(#selector(User.login(type:)), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.count, 1)
+            XCTAssertEqual(aspect.arguments.last as! Int, LoginType.mobile.rawValue)
+        } as AspectBlock)
+        
+        userA.login(type: .mobile)
+        userB.login(type: .email)
         userA.login(type: .mobile, needPassword: true)
         userB.login(type: .email, needPassword: true)
         
-        XCTAssertEqual(invokeCount, 2)
+        XCTAssertEqual(invokeCount, 3)
         XCTAssertEqual(userA.loginType, LoginType.mobile)
         XCTAssertEqual(userB.loginType, LoginType.email)
     }
     
-    func testHookAndUnhookMethod() {
+    func testHookAndUnhookSelector() {
         var invokeCount = 0
         let user = User()
         
@@ -322,12 +340,27 @@ class AspectTests: XCTestCase {
             
             XCTAssertNotNil(aspect.instance)
             XCTAssertEqual(aspect.arguments.count, 0)
-            } as AspectBlock)
+        } as AspectBlock)
         
         customer.logout()
         customer.logout()
         
         XCTAssertEqual(invokeCount, 2)
+    }
+    
+    func testHookStaticMethod() {
+        var invokeCount = 0
+        
+        User.hook(#selector(User.exit), position: .after, usingBlock: { aspect in
+            invokeCount += 1
+            
+            XCTAssertNotNil(aspect.instance)
+            XCTAssertEqual(aspect.arguments.count, 0)
+        } as AspectBlock)
+        
+        User.exit()
+        
+        XCTAssertEqual(invokeCount, 1)
     }
 }
 
@@ -346,37 +379,35 @@ private class User: NSObject {
     var productName: String!
     var price: Double!
     var count: Int!
+    var size: CGSize?
     var indexPath: IndexPath?
     var completion: ((Bool) -> Void)?
     var error: NSError?
     
+    @objc dynamic static func exit() {}
     @objc dynamic func logout() {}
+    
+    @objc dynamic func login(type: LoginType) {
+        loginType = type
+    }
     
     @objc dynamic func login(type: LoginType, needPassword: Bool) {
         loginType = type
     }
     
-    @objc dynamic func buy(productName: String, price: NSNumber, count: NSNumber) {
+    @objc dynamic func buy(productName: String, price: CGFloat, count: Int, size: CGSize) {
         self.productName = productName
-        self.price = price.doubleValue
-        self.count = count.intValue
+        self.price = Double(exactly: price)
+        self.count = count
+        self.size = size
     }
-    
-    #if os(OSX)
+
     @objc dynamic func buy(productName: String, price: Double, count: Int, indexPath: IndexPath) {
         self.productName = productName
         self.price = price
         self.count = count
         self.indexPath = indexPath
     }
-    #else
-    @objc dynamic func buy(productName: String, price: NSNumber, count: NSNumber, indexPath: IndexPath) {
-        self.productName = productName
-        self.price = price.doubleValue
-        self.count = count.intValue
-        self.indexPath = indexPath
-    }
-    #endif
     
     @objc dynamic func buy(products: [Product], completion: ((Bool) -> Void)?) {
         self.products = products
@@ -417,12 +448,17 @@ private class Product: NSObject {
     }
 }
 
-private class Cat: NSObject {
+private class Animal: NSObject {
     
-    @objc dynamic static func run() {}
+    @objc dynamic func run() {}
 }
 
-private class Dog: NSObject {
+private class Cat: Animal {
     
-    @objc dynamic static func run() {}
+    @objc dynamic override func run() {}
+}
+
+private class Dog: Animal {
+    
+    @objc dynamic override func run() {}
 }

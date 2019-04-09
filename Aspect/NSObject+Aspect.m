@@ -9,7 +9,7 @@
 #import "NSObject+Aspect.h"
 @import ObjectiveC;
 @import os.log;
-
+@import os.lock;
 
 #define log_debug(format, ...) __extension__({ \
     NSBundle *currentBundle = [NSBundle bundleForClass:AspectObject.self]; \
@@ -17,7 +17,6 @@
     os_log_t log = os_log_create(currentBundle.bundleIdentifier.UTF8String, bundleName.UTF8String); \
     os_log_debug(log, format, ##__VA_ARGS__); \
 })
-
 
 static NSString *const kAliasSelectorPrefix = @"aspect_";
 
@@ -71,9 +70,7 @@ static NSMethodSignature *aop_blockMethodSignature(id block)
 
 static NSMethodSignature *aop_methodSignature(id target, SEL selector)
 {
-    BOOL isMetaClass = class_isMetaClass(object_getClass(target));
-    NSMethodSignature *signature = isMetaClass ? [[target class] methodSignatureForSelector:selector] : [[target class] instanceMethodSignatureForSelector:selector];
-    return signature;
+    return [[target class] instanceMethodSignatureForSelector:selector] ?: [[target class] methodSignatureForSelector:selector];
 }
 
 static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id target, SEL selector)
@@ -235,20 +232,21 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 #pragma mark -
 @interface AspectIdentifier : NSObject
 
-+ (instancetype)identifierWithTarget:(id)target selector:(SEL)selector block:(id)block;
++ (instancetype)identifierWithTarget:(id)target selector:(SEL)selector position:(AspectPosition)position block:(id)block;
 
 - (void *)invokeWithObject:(AspectObject *)object;
 
 @property (nonatomic, weak) id target;
 @property (nonatomic, assign) SEL selector;
-@property (nonatomic, strong) id block;
+@property (nonatomic, assign) AspectPosition position;
+@property (nonatomic, copy) id block;
 @property (nonatomic, strong) NSMethodSignature *blockSignature;
 
 @end
 
 @implementation AspectIdentifier
 
-+ (instancetype)identifierWithTarget:(id)target selector:(SEL)selector block:(id)block
++ (instancetype)identifierWithTarget:(id)target selector:(SEL)selector position:(AspectPosition)position block:(id)block
 {
     NSMethodSignature *blockSignature = aop_blockMethodSignature(block);
     if (!aop_isCompatibleBlockSignature(blockSignature, target, selector)) {
@@ -260,6 +258,7 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
         identifier = [AspectIdentifier new];
         identifier.target = target;
         identifier.selector = selector;
+        identifier.position = position;
         identifier.block = block;
         identifier.blockSignature = blockSignature;
     }
@@ -312,9 +311,25 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 @end
 
 
-#pragma mark - Aspect Hook
+#pragma mark - Hook
 #pragma mark -
+@interface NSObject ()
+
+@property(nonatomic, strong) NSMutableDictionary<NSString *, AspectIdentifier*> *aop_blocks;
+
+@end
+
 @implementation NSObject (Aspect)
+
+- (NSMutableDictionary<NSString *,id> *)aop_blocks
+{
+    return objc_getAssociatedObject(self, @selector(aop_blocks));
+}
+
+- (void)setAop_blocks:(NSMutableDictionary<NSString *,AspectIdentifier *> *)aop_blocks
+{
+    objc_setAssociatedObject(self, @selector(aop_blocks), aop_blocks, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 
 + (BOOL)hookSelector:(SEL)selector position:(AspectPosition)position usingBlock:(id)block;
 {
@@ -326,244 +341,123 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
     return aop_hookSelector(self, selector, position, block);
 }
 
-+ (BOOL)unhookSelector:(SEL)selector
-{
-    return aop_unhookSelector(self, selector);
-}
-
-- (BOOL)unhookSelector:(SEL)selector
-{
-    return aop_unhookSelector(self, selector);
-}
-
 static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id block)
 {
-#if TARGET_OS_IPHONE
-    // On 64-bit ARM varargs routines use different calling conventions from standard routines.
-    // Thus implementing a non-varargs method with a varargs block is simply not feasible.
-    // This limitation is not just for 64-bit ARM. There are similar differences between varargs
-    // and non-varargs calling conventions on other runtime architectures as well.
-    // It’s just that those differences general occur at the `edges` of the runtime architecture.
-    // So we can only use below work around solution to limit the argument count for ARM64.
-    // https://developer.apple.com/documentation/uikit/core_app/updating_your_app_from_32-bit_to_64-bit_architecture/managing_functions_and_function_pointers
-    IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
-        SEL aliasSelector = aop_aliasForSelector(selector);
-        NSInvocation *originalInvocation = aop_originalInvocation(target, aliasSelector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
-#else
-    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
-        va_list arguments;
-        va_start(arguments, target);
-        
-        SEL originalSelector = aop_aliasForSelector(selector);
-        NSInvocation *originalInvocation = aop_originalInvocation(target, originalSelector, arguments);
-        
-        va_end(arguments);
-#endif
-        
-        if (self != [self class] && self != target) {
-            return aop_invokeOriginalInvocation(originalInvocation);
-        }
-        
-        void *result;
-        
-        switch (position) {
-            case AspectPositionAfter:
-                result = aop_invokeOriginalInvocation(originalInvocation);
-                aop_invokeHookedBlock(target, selector, block, originalInvocation);
-                break;
-                
-            case AspectPositionBefore:
-                aop_invokeHookedBlock(target, selector, block, originalInvocation);
-                result = aop_invokeOriginalInvocation(originalInvocation);
-                break;
-                
-            case AspectPositionInstead:
-                result = aop_invokeHookedBlock(target, selector, block, originalInvocation);
-                break;
-        }
-        
-        return result;
-    });
-    
-    Method method = class_getInstanceMethod([self class], selector);
-    Class clazz = method ? [self class] : object_getClass([self class]);
-    method = method ?: class_getClassMethod([self class], selector);
-    
-    if (method == NULL) {
-        log_debug("Hooked selector <%@> doesn't exist in class <%@>", NSStringFromSelector(selector), NSStringFromClass(clazz));
+    if (!aop_isSelectorAllowedHook(self, selector)) {
+        NSCAssert(false, @"Disallow hook selector <%@>.", NSStringFromSelector(selector));
         return NO;
     }
+    
+    __block BOOL isSuccess = YES;
+    
+    aop_performLock(^{
+        Method method = class_getInstanceMethod([self class], selector);
+        Class clazz = method ? [self class] : object_getClass([self class]);
+        method = method ?: class_getClassMethod([self class], selector);
         
-    Method aliasMethod = class_getInstanceMethod(clazz, aop_aliasForSelector(selector));
-    
-    // If alias method does exist and is not empty implementation which means it is unhooked.
-    if (aliasMethod && method_getImplementation(aliasMethod) != (IMP)aop_emptyImplementationSelector) {
-        log_debug("The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
-        return YES;
-    }
-    
-    IMP imp = method_getImplementation(method);
-    const char *types = method_getTypeEncoding(method);
-    
-    // If add method success, it means the method does not exist in current class, it exists in super class.
-    // We need add a override method and call its super method for hooking.
-    if (class_addMethod(clazz, selector, imp, types)) {
-        method = aop_addOverrideMethodAndHook(clazz, selector, types);
-    } else {
+        if (method == NULL) {
+            log_debug("Hooked selector <%@> doesn't exist in class <%@>", NSStringFromSelector(selector), NSStringFromClass(clazz));
+            isSuccess = NO; return;
+        }
+        
+        Method aliasMethod = class_getInstanceMethod(clazz, aop_aliasForSelector(selector));
+        
+        // If alias method does exist and is not empty implementation which means it is unhooked.
+        if (aliasMethod && method_getImplementation(aliasMethod) != (IMP)aop_emptyImplementationSelector) {
+            log_debug("The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
+            isSuccess = YES; return;
+        }
+        
+        IMP imp = method_getImplementation(method);
+        const char *types = method_getTypeEncoding(method);
+        
+        // If add method failed, it means the alias method already exist in current class, just need set a new imp to it.
         if (!class_addMethod(clazz, aop_aliasForSelector(selector), imp, types)) {
             method_setImplementation(aliasMethod, imp);
         }
-    }
-    
-    method_setImplementation(method, blockIMP);
-    return YES;
-}
-
-static Method aop_addOverrideMethodAndHook(Class clazz, SEL selector, const char *types)
-{
-#if TARGET_OS_IPHONE
-    IMP blockIMP = imp_implementationWithBlock(^(id target, va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6) {
-        NSInvocation *invocation = aop_originalInvocation(target, selector, aop_fixedArguments(arg1, arg2, arg3, arg4, arg5, arg6));
-        return aop_invokeOriginalInvocation(invocation);
-    });
-#else
-    IMP blockIMP = imp_implementationWithBlock(^(id target, ...) {
-        va_list arguments;
-        va_start(arguments, target);
         
-        NSInvocation *invocation = aop_originalInvocation(target, selector, arguments);
-        
-        va_end(arguments);
-        
-        return aop_invokeOriginalInvocation(invocation);
-    });
-#endif
-    
-    Method method = class_getInstanceMethod(clazz, selector);
-    class_addMethod(clazz, aop_aliasForSelector(selector), method_getImplementation(method), types);
-    method_setImplementation(method, blockIMP);
-    
-    return method;
-}
-
-#if TARGET_OS_IPHONE
-static NSArray<NSValue *> *aop_fixedArguments(va_list arg1, va_list arg2, va_list arg3, va_list arg4, va_list arg5, va_list arg6)
-{
-    return @[[NSValue valueWithPointer:arg1], [NSValue valueWithPointer:arg2], [NSValue valueWithPointer:arg3],
-             [NSValue valueWithPointer:arg4], [NSValue valueWithPointer:arg5], [NSValue valueWithPointer:arg6]];
-}
-                                           
-static NSInvocation *aop_originalInvocation(id target, SEL selector, NSArray<NSValue *> *arguments)
-{
-    NSMethodSignature *signature = aop_methodSignature(target, selector);
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-    
-    // Sometimes the target's memory may be released that lead crash when call instance hook method, need call below method to retain it.
-    [invocation retainArguments];
-    
-    invocation.target = target;
-    invocation.selector = selector;
-    
-    // Excludes the first and second arguement
-    NSCAssert(signature.numberOfArguments - 2 <= arguments.count, @"The hooked selector %@ parameter count cannot great than %tu.", NSStringFromSelector(selector), arguments.count);
-    
-    for (int idx = 2; idx < signature.numberOfArguments; idx++) {
-        const char *argt = [signature getArgumentTypeAtIndex:idx];
-        int argIdx = idx - 2;
-        
-        if (strcmp(argt, @encode(id)) == 0) {
-            void *argv = arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (strcmp(argt, @encode(BOOL)) == 0) {
-            BOOL argv = (BOOL)arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (argt[0] == _C_PTR) {
-            void *argv = arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (strcmp(argt, @encode(SEL)) == 0) {
-            SEL argv = (SEL)arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (strcmp(argt, @encode(Class)) == 0) {
-            Class argv = (Class)arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
-            id argv = (id)arguments[argIdx].pointerValue;
-            id copiedVal = [argv copy];
-            [invocation setArgument:&copiedVal atIndex:idx];
-        } else if (strcmp(argt, @encode(int)) == 0 || strcmp(argt, @encode(short)) == 0 || strcmp(argt, @encode(char)) == 0 || strcmp(argt, @encode(BOOL)) == 0 ||
-                   strcmp(argt, @encode(unsigned int)) == 0 || strcmp(argt, @encode(unsigned short)) == 0 || strcmp(argt, @encode(unsigned char)) == 0 ||
-                   strcmp(argt, @encode(long)) == 0 || strcmp(argt, @encode(unsigned long)) == 0 || strcmp(argt, @encode(unsigned long long)) == 0) {
-            void *argv = arguments[argIdx].pointerValue;
-            [invocation setArgument:&argv atIndex:idx];
-        } else {
-            NSCAssert(NO, @"The hooked selector %@ parameters cannot have primitive type <%s>.", NSStringFromSelector(selector), argt);
+        if (![self aop_blocks]) {
+            [self setAop_blocks:[NSMutableDictionary dictionary]];
         }
-    }
+        [self aop_blocks][NSStringFromSelector(selector)] = [AspectIdentifier identifierWithTarget:self selector:selector position:position block:block];
+        
+        
+        class_replaceMethod(clazz, @selector(forwardInvocation:), (IMP)aspect_forwardInvocation, "v@:@");
+        method_setImplementation(method, aspect_msgForwardIMP(clazz, selector));
+    });
     
-    return invocation;
+    return isSuccess;
 }
 
-#else
+static BOOL aop_isSelectorAllowedHook(NSObject *self, SEL selector)
+{
+    return ![@[@"retain", @"release", @"autorelease", @"forwardInvocation:"] containsObject:NSStringFromSelector(selector)];
+}
 
-static NSInvocation *aop_originalInvocation(id target, SEL selector, va_list arguments)
-{
-    NSMethodSignature *signature = aop_methodSignature(target, selector);
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-    invocation.target = target;
-    invocation.selector = selector;
+static void aspect_forwardInvocation(id self, SEL selector, NSInvocation *invocation) {
+    SEL originalSelector = invocation.selector;
+    invocation.selector = aop_aliasForSelector(originalSelector);
     
-    for (int idx = 2; idx < signature.numberOfArguments; idx++) {
-        const char *argtType = [signature getArgumentTypeAtIndex:idx];
-        aop_setupArgument(arguments, argtType, invocation, idx);
+    NSString *key = NSStringFromSelector(originalSelector);
+    AspectIdentifier *identifier = [self aop_blocks][key] ?: [[self class] aop_blocks][key];
+    
+    // It means this instance's selector is not hooked
+    if (identifier == nil) {
+        aop_invokeOriginalInvocation(invocation);
+        return;
     }
     
-    return invocation;
-}
-                                           
-static void aop_setupArgument(va_list arguments, const char *argt, NSInvocation *invocation, NSInteger idx)
-{
-    if (strcmp(argt, @encode(int)) == 0 || strcmp(argt, @encode(short)) == 0 || strcmp(argt, @encode(char)) == 0 || strcmp(argt, @encode(BOOL)) == 0 || strcmp(argt, @encode(bool)) == 0) {
-        int argv = va_arg(arguments, int);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(long)) == 0) {
-        long argv = va_arg(arguments, long);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(long long)) == 0) {
-        long long argv = va_arg(arguments, long long);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(unsigned int)) == 0 || strcmp(argt, @encode(unsigned short)) == 0 || strcmp(argt, @encode(unsigned char)) == 0) {
-        unsigned int argv = va_arg(arguments, unsigned int);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(unsigned long)) == 0) {
-        unsigned long argv = va_arg(arguments, unsigned long);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(unsigned long long)) == 0) {
-        unsigned long long argv = va_arg(arguments, unsigned long long);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(double)) == 0 || strcmp(argt, @encode(float)) == 0) {
-        double argv = va_arg(arguments, double);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (argt[0] == _C_PTR) {
-        void * argv = va_arg(arguments, void *);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(SEL)) == 0) {
-        SEL argv = va_arg(arguments, SEL);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(Class)) == 0) {
-        Class argv = va_arg(arguments, Class);
-        [invocation setArgument:&argv atIndex:idx];
-    } else if (strcmp(argt, @encode(void (^)(void))) == 0) {
-        id argv = va_arg(arguments, id);
-        id copiedVal = [argv copy];
-        [invocation setArgument:&copiedVal atIndex:idx];
-    } else if (strcmp(argt, @encode(id)) == 0) {
-        id argv = va_arg(arguments, id);
-        [invocation setArgument:&argv atIndex:idx];
-    } else {
-        NSCAssert(NO, @"The hooked selector parameters cannot have struct/union type <%s>.", argt);
+    switch (identifier.position) {
+        case AspectPositionAfter:
+            aop_invokeOriginalInvocation(invocation);
+            aop_invokeHookedBlock(self, identifier, invocation);
+            break;
+            
+        case AspectPositionBefore:
+            aop_invokeHookedBlock(self, identifier, invocation);
+            aop_invokeOriginalInvocation(invocation);
+            break;
+            
+        case AspectPositionInstead:
+            aop_invokeHookedBlock(self, identifier, invocation);
+            break;
     }
 }
+
+static IMP aspect_msgForwardIMP(Class clazz, SEL selector) {
+    IMP msgForwardIMP = _objc_msgForward;
+#if !defined(__arm64__)
+    // As an ugly internal runtime implementation detail in the 32bit runtime, we need to determine of the method we hook returns a struct or anything larger than id.
+    // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/000-Introduction/introduction.html
+    // https://github.com/ReactiveCocoa/ReactiveCocoa/issues/783
+    // http://infocenter.arm.com/help/topic/com.arm.doc.ihi0042e/IHI0042E_aapcs.pdf (Section 5.4)
+    Method method = class_getInstanceMethod(clazz, selector);
+    const char *encoding = method_getTypeEncoding(method);
+    BOOL methodReturnsStructValue = encoding[0] == _C_STRUCT_B;
+    if (methodReturnsStructValue) {
+        @try {
+            NSUInteger valueSize = 0;
+            NSGetSizeAndAlignment(encoding, &valueSize, NULL);
+            
+            if (valueSize == 1 || valueSize == 2 || valueSize == 4 || valueSize == 8) {
+                methodReturnsStructValue = NO;
+            }
+        } @catch (NSException *e) {}
+    }
+    if (methodReturnsStructValue) {
+        msgForwardIMP = (IMP)_objc_msgForward_stret;
+    }
 #endif
+    return msgForwardIMP;
+}
+
+static void aop_performLock(dispatch_block_t block)
+{
+    os_unfair_lock aspect_lock = OS_UNFAIR_LOCK_INIT;
+    os_unfair_lock_lock(&aspect_lock);
+    block();
+    os_unfair_lock_unlock(&aspect_lock);
+}
 
 static void* aop_invokeOriginalInvocation(NSInvocation *invocation)
 {
@@ -578,38 +472,58 @@ static void* aop_invokeOriginalInvocation(NSInvocation *invocation)
     return result;
 }
 
-static void* aop_invokeHookedBlock(id self, SEL selector, id block, NSInvocation *invocation)
+static void* aop_invokeHookedBlock(id self, AspectIdentifier *identifier, NSInvocation *invocation)
 {
     AspectObject *object = [[AspectObject alloc] initWithInstance:self invocation:invocation];
-    AspectIdentifier *identifier = [AspectIdentifier identifierWithTarget:self selector:selector block:block];
     return [identifier invokeWithObject:object];
+}
+
+#pragma mark - Unhook
+#pragma mark -
++ (BOOL)unhookSelector:(SEL)selector
+{
+    return aop_unhookSelector(self, selector);
+}
+
+- (BOOL)unhookSelector:(SEL)selector
+{
+    return aop_unhookSelector(self, selector);
 }
 
 static SEL aop_aliasForSelector(SEL selector)
 {
     return NSSelectorFromString([kAliasSelectorPrefix stringByAppendingString:NSStringFromSelector(selector)]);
 }
-                                               
+
 static void aop_emptyImplementationSelector(id self, SEL _cmd) { }
 
 static BOOL aop_unhookSelector(id self, SEL selector)
 {
-    SEL aliasSelector = aop_aliasForSelector(selector);
-    Method aliasMethod = class_getInstanceMethod([self class], aliasSelector);
-    aliasMethod = aliasMethod ?: class_getClassMethod([self class], aliasSelector);
+    __block BOOL isSuccess = YES;
     
-    if (aliasMethod == NULL) {
-        log_debug("No hook for selector <%@> in class <%@>", NSStringFromSelector(selector), NSStringFromClass([self class]));
-        return NO;
-    }
-    
-    Method method = class_getInstanceMethod([self class], selector);
-    method = method ?: class_getClassMethod([self class], selector);
-    
-    IMP originalIMP = method_getImplementation(aliasMethod);
-    method_setImplementation(method, originalIMP);
-    
-    method_setImplementation(aliasMethod, (IMP)aop_emptyImplementationSelector);
+    aop_performLock(^{
+        SEL aliasSelector = aop_aliasForSelector(selector);
+        Method aliasMethod = class_getInstanceMethod([self class], aliasSelector);
+        aliasMethod = aliasMethod ?: class_getClassMethod([self class], aliasSelector);
+        
+        if (aliasMethod == NULL) {
+            log_debug("No hook for selector <%@> in class <%@>", NSStringFromSelector(selector), NSStringFromClass([self class]));
+            isSuccess = NO; return;
+        }
+        
+        Method method = class_getInstanceMethod([self class], selector);
+        method = method ?: class_getClassMethod([self class], selector);
+        
+        IMP originalIMP = method_getImplementation(aliasMethod);
+        method_setImplementation(method, originalIMP);
+        method_setImplementation(aliasMethod, (IMP)aop_emptyImplementationSelector);
+        
+        [[self aop_blocks] removeObjectForKey:NSStringFromSelector(selector)];
+        
+        if ([self aop_blocks].count == 0) {
+            [self setAop_blocks:nil];
+        }
+    });
     
     return YES;
 }

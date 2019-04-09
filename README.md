@@ -76,22 +76,6 @@ NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSessionConfi
 [NSURLSession unhookSelector:@selector(sessionWithConfiguration:)];
 ```
 
-## Limitation
-### macOS
-You can hook any selector which has any argument count without limitation. But **struct and union** type are not supported.
-
-### iOS/tvOS/watchOS
-Since ARM64 varargs routines changed calling conventions, we can only use work around solution to limit method's argument count with **6**, you can change source code to modify the count if needed. For method's argument type, it doesn't support these types that are not NSObject: 
-**float, double, struct, union** and so on.
-
-Some help links about these limitations:   
-[Apple Forum](https://forums.developer.apple.com/thread/38470)  
-[Apple Developer Documentation](https://developer.apple.com/documentation/uikit/core_app/updating_your_app_from_32-bit_to_64-bit_architecture/managing_functions_and_function_pointers)
-
 ## Reference
 
-Thanks for [Aspects](https://github.com/steipete/Aspects) which developed by [@steipete](http://twitter.com/steipete) in GitHub. I referred some codes from this repository.
-
-## Need Help
-
-If some developer has solution to solve these limitations, please contact to me by [@iKrisLiu](https://twitter.com/iKrisLiu) or <ikris.liu@gmail.com>
+Thanks for [Aspects](https://github.com/steipete/Aspects) which developed by [@steipete](http://twitter.com/steipete) in GitHub. I referred some codes from his repository.
