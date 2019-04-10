@@ -252,6 +252,16 @@ class AspectTests: XCTestCase {
         let cat = Cat()
         let dog = Dog()
         
+        Cat.hook(#selector(Cat.eat), position: .after, usingBlock: { aspect in
+            invokeACount += 1
+            XCTAssertNotNil(aspect.instance)
+        } as AspectBlock)
+        
+        Dog.hook(#selector(Dog.eat), position: .after, usingBlock: { aspect in
+            invokeBCount += 1
+            XCTAssertNotNil(aspect.instance)
+        } as AspectBlock)
+        
         Cat.hook(#selector(Cat.run), position: .after, usingBlock: { aspect in
             invokeACount += 1
             XCTAssertNotNil(aspect.instance)
@@ -262,11 +272,14 @@ class AspectTests: XCTestCase {
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
+        Cat.eat()
+        Dog.eat()
+        
         cat.run()
         dog.run()
         
-        XCTAssertEqual(invokeACount, 1)
-        XCTAssertEqual(invokeBCount, 1)
+        XCTAssertEqual(invokeACount, 2)
+        XCTAssertEqual(invokeBCount, 2)
     }
     
     func testHookMethodWithEnumAndBoolType() {
@@ -450,6 +463,7 @@ private class Product: NSObject {
 
 private class Animal: NSObject {
     
+    @objc dynamic static func eat() {}
     @objc dynamic func run() {}
 }
 

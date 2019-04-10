@@ -383,7 +383,7 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
         
         
         class_replaceMethod(clazz, @selector(forwardInvocation:), (IMP)aspect_forwardInvocation, "v@:@");
-        method_setImplementation(method, aspect_msgForwardIMP(clazz, selector));
+        class_replaceMethod(clazz, selector, aspect_msgForwardIMP(clazz, selector), types);
     });
     
     return isSuccess;

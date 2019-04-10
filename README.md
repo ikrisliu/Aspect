@@ -32,7 +32,7 @@ pod 'Aspect', '~> 1.0'
 
 ```swift
 dependencies: [
-.package(url: "https://github.com/iKrisLiu/Aspect", from: "1.0.0")
+    .package(url: "https://github.com/iKrisLiu/Aspect", from: "1.0.0")
 ]
 ```
 
