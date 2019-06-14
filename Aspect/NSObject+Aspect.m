@@ -381,7 +381,6 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
         }
         [self aop_blocks][NSStringFromSelector(selector)] = [AspectIdentifier identifierWithTarget:self selector:selector position:position block:block];
         
-        
         class_replaceMethod(clazz, @selector(forwardInvocation:), (IMP)aspect_forwardInvocation, "v@:@");
         class_replaceMethod(clazz, selector, aspect_msgForwardIMP(clazz, selector), types);
     });
@@ -400,6 +399,18 @@ static void aspect_forwardInvocation(id self, SEL selector, NSInvocation *invoca
     
     NSString *key = NSStringFromSelector(originalSelector);
     AspectIdentifier *identifier = [self aop_blocks][key] ?: [[self class] aop_blocks][key];
+    
+    // Check if the selector hooked by super class
+    if (identifier == nil) {
+        Class class = object_getClass(self);
+        while (identifier == nil) {
+            Class superClass = class_getSuperclass(class);
+            if (superClass == class) { break; }
+            
+            identifier = [class aop_blocks][key];
+            class = superClass;
+        }
+    }
     
     // It means this instance's selector is not hooked
     if (identifier == nil) {

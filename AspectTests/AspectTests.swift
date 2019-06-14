@@ -247,28 +247,25 @@ class AspectTests: XCTestCase {
     }
     
     func testHookSameSelectorInDistinctClasses() {
-        var invokeACount = 0
-        var invokeBCount = 0
+        var invokeCatCount = 0
+        var invokeDogCount = 0
+        var invokeAnimalCount = 0
         let cat = Cat()
         let dog = Dog()
+        let corgi = Corgi()
         
         Cat.hook(#selector(Cat.eat), position: .after, usingBlock: { aspect in
-            invokeACount += 1
+            invokeCatCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
         Dog.hook(#selector(Dog.eat), position: .after, usingBlock: { aspect in
-            invokeBCount += 1
+            invokeDogCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
-        Cat.hook(#selector(Cat.run), position: .after, usingBlock: { aspect in
-            invokeACount += 1
-            XCTAssertNotNil(aspect.instance)
-        } as AspectBlock)
-        
-        Dog.hook(#selector(Dog.run), position: .after, usingBlock: { aspect in
-            invokeBCount += 1
+        Animal.hook(#selector(Animal.run), position: .after, usingBlock: { aspect in
+            invokeAnimalCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
@@ -277,9 +274,11 @@ class AspectTests: XCTestCase {
         
         cat.run()
         dog.run()
+        corgi.run()
         
-        XCTAssertEqual(invokeACount, 2)
-        XCTAssertEqual(invokeBCount, 2)
+        XCTAssertEqual(invokeCatCount, 1)
+        XCTAssertEqual(invokeDogCount, 1)
+        XCTAssertEqual(invokeAnimalCount, 3)
     }
     
     func testHookMethodWithEnumAndBoolType() {
@@ -467,12 +466,10 @@ private class Animal: NSObject {
     @objc dynamic func run() {}
 }
 
-private class Cat: Animal {
-    
-    @objc dynamic override func run() {}
-}
-
-private class Dog: Animal {
-    
-    @objc dynamic override func run() {}
+private class Cat: Animal {}
+private class Dog: Animal {}
+private class Corgi: Dog {
+    @objc dynamic override func run() {
+        super.run()
+    }
 }
