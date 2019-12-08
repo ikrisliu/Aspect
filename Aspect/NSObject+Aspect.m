@@ -11,11 +11,11 @@
 @import os.log;
 @import os.lock;
 
-#define log_debug(format, ...) __extension__({ \
+#define aop_log(format, ...) __extension__({ \
     NSBundle *currentBundle = [NSBundle bundleForClass:AspectObject.self]; \
     NSString *bundleName = currentBundle.infoDictionary[@"CFBundleName"]; \
     os_log_t log = os_log_create(currentBundle.bundleIdentifier.UTF8String, bundleName.UTF8String); \
-    os_log_debug(log, format, ##__VA_ARGS__); \
+    os_log_error(log, format, ##__VA_ARGS__); \
 })
 
 static NSString *const kAliasSelectorPrefix = @"aspect_";
@@ -49,7 +49,7 @@ static NSMethodSignature *aop_blockMethodSignature(id block)
 {
     AspectBlockRef layout = (__bridge void *)block;
     if (!(layout->flags & AspectBlockFlagsHasSignature)) {
-        log_debug("The block <%@> doesn't contain a type signature.", block);
+        aop_log("❌ The block <%@> doesn't contain a type signature.", block);
         return nil;
     }
     
@@ -60,7 +60,7 @@ static NSMethodSignature *aop_blockMethodSignature(id block)
     }
     
     if (!desc) {
-        log_debug("The block <%@> doesn't has a type signature.", block);
+        aop_log("❌ The block <%@> doesn't has a type signature.", block);
         return nil;
     }
     
@@ -101,7 +101,7 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
     }
     
     if (!signaturesMatch) {
-        log_debug("Block signature <%@> doesn't match <%@>.", blockSignature, methodSignature);
+        aop_log("❌ Block signature <%@> doesn't match <%@>.", blockSignature, methodSignature);
         return NO;
     }
     
@@ -356,15 +356,15 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
         method = method ?: class_getClassMethod([self class], selector);
         
         if (method == NULL) {
-            log_debug("Hooked selector <%@> doesn't exist in class <%@>", NSStringFromSelector(selector), NSStringFromClass(clazz));
+            aop_log("❌ Hooked selector <%@> doesn't exist in class <%@>", NSStringFromSelector(selector), NSStringFromClass(clazz));
             isSuccess = NO; return;
         }
         
         Method aliasMethod = class_getInstanceMethod(clazz, aop_aliasForSelector(selector));
         
-        // If alias method does exist and is not empty implementation which means it is unhooked.
+        // If alias method does exist and is not empty implementation which means it is hooked.
         if (aliasMethod && method_getImplementation(aliasMethod) != (IMP)aop_emptyImplementationSelector) {
-            log_debug("The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
+            aop_log("❌ The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
             isSuccess = YES; return;
         }
         
@@ -395,42 +395,51 @@ static BOOL aop_isSelectorAllowedHook(NSObject *self, SEL selector)
 
 static void aspect_forwardInvocation(id self, SEL selector, NSInvocation *invocation) {
     SEL originalSelector = invocation.selector;
-    invocation.selector = aop_aliasForSelector(originalSelector);
-    
+    SEL aliasSelector = aop_aliasForSelector(originalSelector);
+
     NSString *key = NSStringFromSelector(originalSelector);
     AspectIdentifier *identifier = [self aop_blocks][key] ?: [[self class] aop_blocks][key];
     
     // Check if the selector hooked by super class
-    if (identifier == nil) {
-        Class class = object_getClass(self);
-        while (identifier == nil) {
-            Class superClass = class_getSuperclass(class);
-            if (superClass == class) { break; }
-            
-            identifier = [class aop_blocks][key];
-            class = superClass;
-        }
+    AspectIdentifier *superIdentifier;
+    Class currClass = object_getClass(self);
+    while (superIdentifier == nil) {
+        Class superClass = class_getSuperclass(currClass);
+        if (superClass == currClass) { break; }
+        
+        currClass = superClass;
+        superIdentifier = [currClass aop_blocks][key];
     }
     
-    // It means this instance's selector is not hooked
+    // If the same selector is hooked by sub class and super class, and the sub class is hooked first,
+    // must unhook the selector of super class, otherwise, it will lead to call method with infinite loop.
+    if (identifier != nil && superIdentifier != nil) {
+        identifier = nil;   // Set with nil in order to only call original invocation
+        aop_unhookSelector(self, originalSelector);
+        aop_log("❌ The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(originalSelector), NSStringFromClass(object_getClass(self)));
+    } else if (identifier == nil && superIdentifier != nil) {
+        identifier = superIdentifier;
+    }
+    
+    // It means this instance's selector is hooked by super class, not the current class.
     if (identifier == nil) {
-        aop_invokeOriginalInvocation(invocation);
+        aop_invokeOriginalInvocation(invocation, aliasSelector);
         return;
     }
     
     switch (identifier.position) {
         case AspectPositionAfter:
-            aop_invokeOriginalInvocation(invocation);
-            aop_invokeHookedBlock(self, identifier, invocation);
+            aop_invokeOriginalInvocation(invocation, aliasSelector);
+            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
             break;
             
         case AspectPositionBefore:
-            aop_invokeHookedBlock(self, identifier, invocation);
-            aop_invokeOriginalInvocation(invocation);
+            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
+            aop_invokeOriginalInvocation(invocation, aliasSelector);
             break;
             
         case AspectPositionInstead:
-            aop_invokeHookedBlock(self, identifier, invocation);
+            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
             break;
     }
 }
@@ -470,8 +479,9 @@ static void aop_performLock(dispatch_block_t block)
     os_unfair_lock_unlock(&aspect_lock);
 }
 
-static void* aop_invokeOriginalInvocation(NSInvocation *invocation)
+static void* aop_invokeOriginalInvocation(NSInvocation *invocation, SEL selector)
 {
+    invocation.selector = selector;
     [invocation invoke];
     
     if (strcmp(invocation.methodSignature.methodReturnType, @encode(void)) == 0) {
@@ -483,8 +493,9 @@ static void* aop_invokeOriginalInvocation(NSInvocation *invocation)
     return result;
 }
 
-static void* aop_invokeHookedBlock(id self, AspectIdentifier *identifier, NSInvocation *invocation)
+static void* aop_invokeHookedBlock(id self, AspectIdentifier *identifier, NSInvocation *invocation, SEL selector)
 {
+    invocation.selector = selector;
     AspectObject *object = [[AspectObject alloc] initWithInstance:self invocation:invocation];
     return [identifier invokeWithObject:object];
 }
@@ -518,7 +529,7 @@ static BOOL aop_unhookSelector(id self, SEL selector)
         aliasMethod = aliasMethod ?: class_getClassMethod([self class], aliasSelector);
         
         if (aliasMethod == NULL) {
-            log_debug("No hook for selector <%@> in class <%@>", NSStringFromSelector(selector), NSStringFromClass([self class]));
+            aop_log("❌ No hook for selector <%@> in class <%@>", NSStringFromSelector(selector), NSStringFromClass([self class]));
             isSuccess = NO; return;
         }
         

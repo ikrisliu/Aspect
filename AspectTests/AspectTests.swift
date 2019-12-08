@@ -264,7 +264,7 @@ class AspectTests: XCTestCase {
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
         
-        Animal.hook(#selector(Animal.run), position: .after, usingBlock: { aspect in
+        Animal.hook(#selector(Animal.roar), position: .after, usingBlock: { aspect in
             invokeAnimalCount += 1
             XCTAssertNotNil(aspect.instance)
         } as AspectBlock)
@@ -272,13 +272,35 @@ class AspectTests: XCTestCase {
         Cat.eat()
         Dog.eat()
         
-        cat.run()
-        dog.run()
-        corgi.run()
+        cat.roar()
+        dog.roar()
+        corgi.roar()
         
         XCTAssertEqual(invokeCatCount, 1)
         XCTAssertEqual(invokeDogCount, 1)
         XCTAssertEqual(invokeAnimalCount, 3)
+    }
+    
+    // Must hook the selector of subclass and then hook the selector of super class for the unit test
+    func testHookSameSelectorDuplicated() {
+        var invokeDogCount = 0
+        let dog = Dog()
+        let corgi = Corgi()
+
+        Corgi.hook(#selector(Corgi.run), position: .after, usingBlock: { aspect in
+            invokeDogCount += 1
+            XCTAssertNotNil(aspect.instance)
+        } as AspectBlock)
+
+        Dog.hook(#selector(Dog.run), position: .after, usingBlock: { aspect in
+            invokeDogCount += 1
+            XCTAssertNotNil(aspect.instance)
+        } as AspectBlock)
+
+        dog.run()
+        corgi.run()
+
+        XCTAssertEqual(invokeDogCount, 1)
     }
     
     func testHookMethodWithEnumAndBoolType() {
@@ -340,6 +362,8 @@ class AspectTests: XCTestCase {
         
         user.logout()
         XCTAssertEqual(invokeCount, 2)
+        
+        User.unhookSelector(#selector(User.logout))
     }
     
     func testHookNoImplementationSelector() {
@@ -358,6 +382,8 @@ class AspectTests: XCTestCase {
         customer.logout()
         
         XCTAssertEqual(invokeCount, 2)
+        
+        Customer.unhookSelector(#selector(Customer.logout))
     }
     
     func testHookStaticMethod() {
@@ -464,6 +490,7 @@ private class Animal: NSObject {
     
     @objc dynamic static func eat() {}
     @objc dynamic func run() {}
+    @objc dynamic func roar() {}
 }
 
 private class Cat: Animal {}
