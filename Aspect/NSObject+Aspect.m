@@ -413,7 +413,8 @@ static void aspect_forwardInvocation(id self, SEL selector, NSInvocation *invoca
     
     // If the same selector is hooked by sub class and super class, and the sub class is hooked first,
     // must unhook the selector of super class, otherwise, it will lead to call method with infinite loop.
-    if (identifier != nil && superIdentifier != nil) {
+    // Since KVO will create a subclass which inherits the current class, this case doesn't belong to duplicate hook.
+    if (identifier != nil && superIdentifier != nil && ![NSStringFromClass(object_getClass(self)) hasPrefix:@"NSKVONotifying"]) {
         identifier = nil;   // Set with nil in order to only call original invocation
         aop_unhookSelector(self, originalSelector);
         aop_log("❌ The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(originalSelector), NSStringFromClass(object_getClass(self)));
