@@ -315,18 +315,18 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
 #pragma mark -
 @interface NSObject ()
 
-@property(nonatomic, strong) NSMutableDictionary<NSString *, AspectIdentifier*> *aop_blocks;
+@property(nonatomic, strong) NSMutableDictionary<NSString*, AspectIdentifier*> *aop_blocks;
 
 @end
 
 @implementation NSObject (Aspect)
 
-- (NSMutableDictionary<NSString *,id> *)aop_blocks
+- (NSMutableDictionary<NSString*, AspectIdentifier*> *)aop_blocks
 {
     return objc_getAssociatedObject(self, @selector(aop_blocks));
 }
 
-- (void)setAop_blocks:(NSMutableDictionary<NSString *,AspectIdentifier *> *)aop_blocks
+- (void)setAop_blocks:(NSMutableDictionary<NSString*, AspectIdentifier*> *)aop_blocks
 {
     objc_setAssociatedObject(self, @selector(aop_blocks), aop_blocks, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
@@ -363,9 +363,16 @@ static BOOL aop_hookSelector(id self, SEL selector, AspectPosition position, id 
         Method aliasMethod = class_getInstanceMethod(clazz, aop_aliasForSelector(selector));
         
         // If alias method does exist and is not empty implementation which means it is hooked.
+        // NOTE: If aop_blocks count is great than 0, it means the instance has been released, does not exist duplicate hook.
+        BOOL isInstanceHook = self != [self class];
         if (aliasMethod && method_getImplementation(aliasMethod) != (IMP)aop_emptyImplementationSelector) {
-            aop_log("❌ The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
-            isSuccess = YES; return;
+            NSString *key = NSStringFromSelector(selector);
+            if (isInstanceHook && [self aop_blocks][key] == nil) {
+                aop_unhookSelector(self, selector);
+            } else {
+                aop_log("❌ The selector <%@> in class <%@> has been hooked, disallow duplicate hook.", NSStringFromSelector(selector), NSStringFromClass(clazz));
+                isSuccess = YES; return;
+            }
         }
         
         IMP imp = method_getImplementation(method);
