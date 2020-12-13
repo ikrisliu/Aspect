@@ -191,7 +191,6 @@
 			children = (
 				01F72A5E25862C35006C3567 /* Aspect.swift */,
 				01F72B1525862E93006C3567 /* include */,
-				01F72A6025862C35006C3567 /* NSObject+Aspect.h */,
 				01F72A5D25862C35006C3567 /* NSObject+Aspect.m */,
 			);
 			path = Aspect;
@@ -219,6 +218,7 @@
 			isa = PBXGroup;
 			children = (
 				01F72B1625862E93006C3567 /* Aspect.h */,
+				01F72A6025862C35006C3567 /* NSObject+Aspect.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
