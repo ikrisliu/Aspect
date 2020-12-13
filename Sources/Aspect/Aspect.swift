@@ -3,7 +3,7 @@
 //  Aspect
 //
 //  Created by Kris Liu on 2019/3/9.
-//  Copyright © 2019 Syzygy. All rights reserved.
+//  Copyright © 2019 Crescent. All rights reserved.
 //
 
 import Foundation

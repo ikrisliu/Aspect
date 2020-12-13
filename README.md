@@ -13,11 +13,13 @@ Aspect Oriented Programming in Objective-C and Swift. (For swift, the method mus
 - Hook methods with same name in different classes
 
 ## Installation
-### Carthage
-[Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependencies and provides you with binary frameworks. To integrate Aspect into your Xcode project using Carthage, specify it in your `Cartfile`:
+### Swift Package Manager
+[Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. To integrate Aspect into your Xcode project, specify it in your `Package.swift`.
 
-```ogdl
-github "iKrisLiu/Aspect" ~> 1.0
+```swift
+dependencies: [
+    .package(url: "https://github.com/iKrisLiu/Aspect", .upToNextMajor(from: "1.0.0"))
+]
 ```
 
 ### CocoaPods
@@ -27,13 +29,11 @@ github "iKrisLiu/Aspect" ~> 1.0
 pod 'Aspect', '~> 1.0'
 ```
 
-### Swift Package Manager
-[Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. To integrate Aspect into your Xcode project, specify it in your `Package.swift`.
+### Carthage
+[Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependencies and provides you with binary frameworks. To integrate Aspect into your Xcode project using Carthage, specify it in your `Cartfile`:
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/iKrisLiu/Aspect", from: "1.0.0")
-]
+```ogdl
+github "iKrisLiu/Aspect" ~> 1.0
 ```
 
 ## Usage
@@ -52,7 +52,7 @@ UIViewController.hook(#selector(UIViewController.viewDidAppear(_:)), position: .
 let viewController = UIViewController()
 viewController.hook(#selector(UIViewController.viewDidLoad), position: .before, usingBlock: { aspect in
     print("Do something in this block")
-} as AspectBlock)
+} as @convention(block) (AspectObject) -> Void)
 
 NSObject.hook(#selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
     print("Do something in this block")
