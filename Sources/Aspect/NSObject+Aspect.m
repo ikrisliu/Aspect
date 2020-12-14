@@ -438,16 +438,16 @@ static void aspect_forwardInvocation(id self, SEL selector, NSInvocation *invoca
     switch (identifier.position) {
         case AspectPositionAfter:
             aop_invokeOriginalInvocation(invocation, aliasSelector);
-            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
+            aop_invokeHookedBlock(self, identifier, invocation, aliasSelector);
             break;
             
         case AspectPositionBefore:
-            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
+            aop_invokeHookedBlock(self, identifier, invocation, aliasSelector);
             aop_invokeOriginalInvocation(invocation, aliasSelector);
             break;
             
         case AspectPositionInstead:
-            aop_invokeHookedBlock(self, identifier, invocation, originalSelector);
+            aop_invokeHookedBlock(self, identifier, invocation, aliasSelector);
             break;
     }
 }

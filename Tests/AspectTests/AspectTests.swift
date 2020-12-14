@@ -135,14 +135,16 @@ class AspectTests: XCTestCase {
             invokeCount += 1
             guard let target = aspect.instance as? User else { XCTFail(); return }
             
+            aspect.originalInvocation.invoke()
+            
             XCTAssertNotNil(target)
-            XCTAssertNil(target.productName)
+            XCTAssertNotNil(target.productName)
         } as AspectBlock)
         
         user.buy(productName: "MacBook", price: 10000, count: 2, size: size)
         
         XCTAssertEqual(invokeCount, 1)
-        XCTAssertNil(user.productName)
+        XCTAssertEqual(user.productName, "MacBook")
     }
     
     func testAfterHookSelectorOfOneInstance() {

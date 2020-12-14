@@ -56,6 +56,7 @@ viewController.hook(#selector(UIViewController.viewDidLoad), position: .before, 
 
 NSObject.hook(#selector(doesNotRecognizeSelector(_:)), position: .instead, usingBlock: { aspect in
     print("Do something in this block")
+    aspect.originalInvocation.invoke()  // Call original selector
 } as AspectBlock)
 
 // Unhook selector
