@@ -101,7 +101,7 @@ static BOOL aop_isCompatibleBlockSignature(NSMethodSignature *blockSignature, id
     }
     
     if (!signaturesMatch) {
-        aop_log("❌ Block signature <%@> doesn't match <%@>.", blockSignature, methodSignature);
+        NSCAssert(false, @"Block signature doesn't match with signature of selector <%@> in class <%@>.", NSStringFromSelector(selector), NSStringFromClass([target class]));
         return NO;
     }
     

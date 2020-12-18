@@ -29,9 +29,9 @@
 		01F72B5425866659006C3567 /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8D25862C42006C3567 /* AspectTests.swift */; };
 		01F72B5C25866659006C3567 /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8D25862C42006C3567 /* AspectTests.swift */; };
 		01F72B642586665A006C3567 /* AspectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8D25862C42006C3567 /* AspectTests.swift */; };
-		01F72B9625866664006C3567 /* Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* Aspect.m */; };
-		01F72B9E25866665006C3567 /* Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* Aspect.m */; };
-		01F72BA625866666006C3567 /* Aspect.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* Aspect.m */; };
+		01F72B9625866664006C3567 /* AspectObjCTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* AspectObjCTests.m */; };
+		01F72B9E25866665006C3567 /* AspectObjCTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* AspectObjCTests.m */; };
+		01F72BA625866666006C3567 /* AspectObjCTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 01F72A8E25862C42006C3567 /* AspectObjCTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,7 +74,7 @@
 		01F72A6025862C35006C3567 /* NSObject+Aspect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Aspect.h"; sourceTree = "<group>"; };
 		01F72A6125862C35006C3567 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01F72A8D25862C42006C3567 /* AspectTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AspectTests.swift; sourceTree = "<group>"; };
-		01F72A8E25862C42006C3567 /* Aspect.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Aspect.m; sourceTree = "<group>"; };
+		01F72A8E25862C42006C3567 /* AspectObjCTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AspectObjCTests.m; sourceTree = "<group>"; };
 		01F72A8F25862C42006C3567 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01F72B1625862E93006C3567 /* Aspect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Aspect.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -208,7 +208,7 @@
 		01F72A8C25862C42006C3567 /* AspectTests */ = {
 			isa = PBXGroup;
 			children = (
-				01F72A8E25862C42006C3567 /* Aspect.m */,
+				01F72A8E25862C42006C3567 /* AspectObjCTests.m */,
 				01F72A8D25862C42006C3567 /* AspectTests.swift */,
 			);
 			path = AspectTests;
@@ -519,7 +519,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01F72B5C25866659006C3567 /* AspectTests.swift in Sources */,
-				01F72B9E25866665006C3567 /* Aspect.m in Sources */,
+				01F72B9E25866665006C3567 /* AspectObjCTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,7 +555,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01F72B642586665A006C3567 /* AspectTests.swift in Sources */,
-				01F72B9625866664006C3567 /* Aspect.m in Sources */,
+				01F72B9625866664006C3567 /* AspectObjCTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,7 +564,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01F72B5425866659006C3567 /* AspectTests.swift in Sources */,
-				01F72BA625866666006C3567 /* Aspect.m in Sources */,
+				01F72BA625866666006C3567 /* AspectObjCTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

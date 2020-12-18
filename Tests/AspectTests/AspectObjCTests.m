@@ -1,6 +1,6 @@
 //
-//  Aspect.m
-//  Aspect
+//  AspectObjCTests.m
+//  AspectObjCTests
 //
 //  Created by Kris Liu on 2019/4/1.
 //  Copyright © 2019 Crescent. All rights reserved.
@@ -9,11 +9,11 @@
 #import <XCTest/XCTest.h>
 @import Aspect;
 
-@interface Aspect : XCTestCase
+@interface AspectObjCTests : XCTestCase
 
 @end
 
-@implementation Aspect
+@implementation AspectObjCTests
 
 - (void)testHookStaticMethod {
     __block NSUInteger invokeCount = 0;
