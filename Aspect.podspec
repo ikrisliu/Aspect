@@ -3,9 +3,9 @@ Pod::Spec.new do |s|
   s.version = '1.3.7'
   s.license = 'MIT'
   s.summary = 'Aspect Oriented Programming in Objective-C and Swift'
-  s.homepage = 'https://github.com/ongravity/Aspect'
+  s.homepage = 'https://github.com/iKrisLiu/Aspect'
   s.authors = { 'Kris Liu' => 'ikris.liu@gmail.com' }
-  s.source = { :git => 'https://github.com/ongravity/Aspect.git', :tag => s.version }
+  s.source = { :git => 'https://github.com/iKrisLiu/Aspect.git', :tag => s.version }
 
   s.ios.deployment_target = '10.0'
   s.osx.deployment_target = '10.12'
